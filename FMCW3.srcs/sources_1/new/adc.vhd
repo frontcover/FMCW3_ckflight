@@ -17,12 +17,15 @@ architecture Behavioral of adc is
 
     constant generate_fir               : boolean := true;
     signal data_a_buffer, data_b_buffer : std_logic_vector(11 downto 0);
-
+    
+    -- I have checked s_axis_data_tready output which is always 1 so it means fir can accept new input all the time.
+    -- Because of that, fir_data_in_valid is constant 1 so it says that fir data is ready since adc is sampled with the
+    -- same clock so adc data will be available at every clock edge.
     COMPONENT fir_compiler_0
     PORT (
         aclk                : IN STD_LOGIC;
-        s_axis_data_tvalid  : IN STD_LOGIC; -- “the input data is valid and ready to be consumed by FIR if it can accept it.”
-        s_axis_data_tready  : OUT STD_LOGIC;
+        s_axis_data_tvalid  : IN STD_LOGIC; -- the input data is valid and ready to be consumed by FIR if it can accept it
+        s_axis_data_tready  : OUT STD_LOGIC; -- FIR can accept new input data but i have check it
         s_axis_data_tdata   : IN STD_LOGIC_VECTOR(31 DOWNTO 0);
         m_axis_data_tvalid  : OUT STD_LOGIC;
         m_axis_data_tdata   : OUT STD_LOGIC_VECTOR(31 DOWNTO 0)
