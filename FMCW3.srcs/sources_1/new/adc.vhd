@@ -39,7 +39,10 @@ architecture Behavioral of adc is
     signal fir_a, fir_b                 : std_logic_vector(15 downto 0);
     
 begin
-
+    
+    -- adc gives one channel's data at rising edge and second channel's data at falling edge.
+    -- therefore both channels are sampled in one clock cycle
+    
     rising : process(clk, adc_data)    
     begin
         if rising_edge(clk) then
