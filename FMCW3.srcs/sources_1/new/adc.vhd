@@ -5,7 +5,7 @@ use IEEE.NUMERIC_STD.ALL;
 
 -- This is the 2 fir compiler implementation code.
 -- Because based on the 2 channel interleaved fir compiler implementation sim result,
--- They dont look identical
+-- They dont look identia
 
 entity adc is
     Port( 
@@ -36,7 +36,8 @@ architecture Behavioral of adc is
     signal fir1_data_in_valid            : std_logic := '1';
     signal fir2_data_in_valid            : std_logic := '1';
     
-    signal fir1_ready                    : std_logic;
+    -- "the input data is valid and ready to be consumed by FIR if it can accept it. It is ready on sim so it is not checked"
+    signal fir1_ready                    : std_logic;  
     signal fir2_ready                    : std_logic;
     
     signal fir1_data_in, fir1_data_out   : std_logic_vector(16 downto 0);
@@ -68,6 +69,7 @@ begin
         end if;        
     end process;
     
+    -- Sampled data is registered to these signals and concatanated with 4 zeros to make it 16 bit simultaneously
     fir1_data_in <= "0000"&data_a_buffer;
     fir2_data_in <= "0000"&data_b_buffer;
     
