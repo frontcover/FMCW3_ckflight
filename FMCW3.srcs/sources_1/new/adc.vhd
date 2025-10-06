@@ -27,9 +27,9 @@ architecture Behavioral of adc is
         aclk                : IN STD_LOGIC;
         s_axis_data_tvalid  : IN STD_LOGIC;
         s_axis_data_tready  : OUT STD_LOGIC;
-        s_axis_data_tdata   : IN STD_LOGIC_VECTOR(31 DOWNTO 0);
+        s_axis_data_tdata   : IN STD_LOGIC_VECTOR(15 DOWNTO 0);
         m_axis_data_tvalid  : OUT STD_LOGIC;
-        m_axis_data_tdata   : OUT STD_LOGIC_VECTOR(31 DOWNTO 0)
+        m_axis_data_tdata   : OUT STD_LOGIC_VECTOR(15 DOWNTO 0)
         );
     END COMPONENT;
     
@@ -40,8 +40,8 @@ architecture Behavioral of adc is
     signal fir1_ready                    : std_logic;  
     signal fir2_ready                    : std_logic;
     
-    signal fir1_data_in, fir1_data_out   : std_logic_vector(16 downto 0);
-    signal fir2_data_in, fir2_data_out   : std_logic_vector(16 downto 0);
+    signal fir1_data_in, fir1_data_out   : std_logic_vector(15 downto 0);
+    signal fir2_data_in, fir2_data_out   : std_logic_vector(15 downto 0);
     
     signal fir_a, fir_b                  : std_logic_vector(15 downto 0);
     
