@@ -5,7 +5,7 @@ use IEEE.NUMERIC_STD.ALL;
 
 -- This is the 2 fir compiler implementation code.
 -- Because based on the 2 channel interleaved fir compiler implementation sim result,
--- They dont look identia
+-- They dont look identical
 
 entity adc is
     Port( 
@@ -45,6 +45,10 @@ architecture Behavioral of adc is
     
     signal fir_a, fir_b                  : std_logic_vector(15 downto 0);
     
+    signal fir1_valid                    : std_logic;
+    signal fir2_valid                    : std_logic;
+    signal nofir_valid                   : std_logic;
+    
 begin
 
     rising : process(clk, adc_data)    
@@ -67,7 +71,7 @@ begin
             data_a <= fir_a;
             data_b <= fir_b;
         end if;        
-    end process;
+    end process;    
     
     -- Sampled data is registered to these signals and concatanated with 4 zeros to make it 16 bit simultaneously
     fir1_data_in <= "0000"&data_a_buffer;
@@ -76,8 +80,10 @@ begin
     fir_a <= fir1_data_out;
     fir_b <= fir2_data_out;
     
+    valid <= fir1_valid and fir2_valid when generate_fir else nofir_valid;
+    
     -- If fir filter is selected.
-    g_fir : if generate_fir generate
+    g_fir : if generate_fir generate               
     
     fir1 : fir_compiler_0
     PORT MAP (
@@ -85,7 +91,7 @@ begin
         s_axis_data_tvalid  => fir1_data_in_valid,
         s_axis_data_tready  => fir1_ready,
         s_axis_data_tdata   => fir1_data_in,
-        m_axis_data_tvalid  => valid,
+        m_axis_data_tvalid  => fir1_valid,
         m_axis_data_tdata   => fir1_data_out
     );  
     
@@ -95,10 +101,9 @@ begin
         s_axis_data_tvalid  => fir2_data_in_valid,
         s_axis_data_tready  => fir2_ready,
         s_axis_data_tdata   => fir2_data_in,
-        m_axis_data_tvalid  => valid,
+        m_axis_data_tvalid  => fir2_valid,
         m_axis_data_tdata   => fir2_data_out
-    );                  
-    
+    );                      
     
     end generate;
     
@@ -115,10 +120,10 @@ begin
             if rising_edge(clk) then
                 if count = to_unsigned(40, 8) then
                     count := (others => '0');
-                    valid <= '1';
+                    nofir_valid <= '1';
                 else
                     count := count + 1;
-                    valid <= '0';
+                    nofir_valid <= '0';
                 end if;
             end if;
         end process;
