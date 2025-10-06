@@ -3,10 +3,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.NUMERIC_STD.ALL;
 
--- This is the 2 fir compiler implementation code.
--- Because based on the 2 channel interleaved fir compiler implementation sim result,
--- They dont look identical
-
+-- This is the single fir compiler 2 channel interleaved code.
 entity adc is
     Port( 
         clk         : in STD_LOGIC;
@@ -124,3 +121,4 @@ begin
     end generate;
     
 end Behavioral;
+
