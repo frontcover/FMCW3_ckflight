@@ -50,21 +50,25 @@ architecture Behavioral of adc is
     signal nofir_valid                   : std_logic;
     
 begin
-
+    
+    -- ADC Channel 1 sample on rising edge
     rising : process(clk, adc_data)    
     begin
         if rising_edge(clk) then
             data_a_buffer <= adc_data;
         end if;        
     end process;
-        
+    
+    -- ADC channel 2 sample on falling edge
     falling : process(clk, adc_data)    
     begin    
         if falling_edge(clk) then
             data_b_buffer <= adc_data;
         end if;        
     end process;
-        
+    
+    -- fir output is registered to output sync with clock
+    -- Other modules are synced to clock so output it accordingly
     output : process(clk)
     begin    
         if rising_edge(clk) then
@@ -76,10 +80,13 @@ begin
     -- Sampled data is registered to these signals and concatanated with 4 zeros to make it 16 bit simultaneously
     fir1_data_in <= "0000"&data_a_buffer;
     fir2_data_in <= "0000"&data_b_buffer;
-    
+        
     fir_a <= fir1_data_out;
     fir_b <= fir2_data_out;
     
+    -- Assign valid signal
+    -- If fir is true: fir1 and fir2 result should be both 1
+    -- If fir is false: nofir result will be assigned to valid.
     valid <= fir1_valid and fir2_valid when generate_fir else nofir_valid;
     
     -- If fir filter is selected.
