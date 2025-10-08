@@ -62,11 +62,9 @@ begin
 
                 when st_store =>
                     -- Now store valid byte
-                    tmp_data(((PACKET_SIZE-1-byte_counter)*8+7) downto ((PACKET_SIZE-1-byte_counter)*8))
-                        <= usb_readdata;
+                    tmp_data((byte_counter*8+7) downto (byte_counter*8)) <= usb_readdata;
 
                     if byte_counter = PACKET_SIZE-1 then
-                        config_done  <= '1';
                         byte_counter <= 0;
                         st <= st_done;
                     else
