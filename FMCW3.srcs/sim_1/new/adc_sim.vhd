@@ -4,10 +4,10 @@ use IEEE.NUMERIC_STD.ALL;
 use std.textio.all;
 use ieee.std_logic_textio.all;
 
-entity tb_adc is
-end tb_adc;
+entity adc_sim is
+end adc_sim;
 
-architecture sim of tb_adc is
+architecture sim of adc_sim is
 
     -- DUT component
     component adc
