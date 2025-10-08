@@ -7,6 +7,7 @@
     -- USB sends a byte.
     -- FT2232H signals usb_rxf_n = 0.
     -- Module automatically writes the byte into RX FIFO.
+
 --CPU just reads:
     -- Assert chipselect = 1
     -- Pull read_n = 0
