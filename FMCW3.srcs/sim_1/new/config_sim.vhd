@@ -7,7 +7,7 @@ end config_sim;
 
 architecture sim of config_sim is
 
-    constant PACKET_SIZE : integer := 16;
+    constant PACKET_SIZE : integer := 64;
 
     signal clk          : std_logic := '0';
     signal reset        : std_logic := '1';
@@ -28,7 +28,7 @@ architecture sim of config_sim is
     --------------------------------------------------------------------
     component config
         generic (
-            PACKET_SIZE : integer := 16
+            PACKET_SIZE : integer := 64
         );
         port (
             clk          : in  std_logic;

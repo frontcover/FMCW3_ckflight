@@ -1,17 +1,12 @@
-
--- CURRENT STATUS OF THE MODULE:
--- It reads usb_sync rx and stores 64 bytes to internal register. 
--- Later i will send these bytes to microblaze with uart for simplicity. 
-
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.NUMERIC_STD.ALL;
 
 entity config is
     generic (
-        PACKET_SIZE : integer := 64  -- number of bytes to register
+        PACKET_SIZE : integer := 128
     );
-    Port (
+    port (
         clk          : in  std_logic;
         reset        : in  std_logic;
         usb_rx_empty : in  std_logic;
@@ -19,54 +14,79 @@ entity config is
         chipselect   : out std_logic;
         read_n       : out std_logic;
         config_done  : out std_logic;
-        data_out     : out std_logic_vector(PACKET_SIZE*8-1 downto 0) -- this might not be needed if i send data over uart in here after reception
+        data_out     : out std_logic_vector(PACKET_SIZE*8-1 downto 0)
     );
 end config;
 
 architecture Behavioral of config is
 
-    type state_type is (IDLE, READ);
-    signal state        : state_type := IDLE;
-    signal byte_counter : integer range 0 to PACKET_SIZE-1 := 0;
+    -- State machine
+    type state_type is (st_idle, st_read, st_wait, st_store, st_done);
+    signal st : state_type := st_idle;
+
+    -- Counter and storage
+    signal byte_counter : integer range 0 to PACKET_SIZE := 0;
     signal tmp_data     : std_logic_vector(PACKET_SIZE*8-1 downto 0) := (others => '0');
 
 begin
 
-    config_proc: process(clk, reset)
+    process(clk, reset)
     begin
         if reset = '1' then
-            state        <= IDLE;
+            st           <= st_idle;
             byte_counter <= 0;
             tmp_data     <= (others => '0');
-            chipselect   <= '0';
-            read_n       <= '1';
-            config_done  <= '0';
+            chipselect   <= '0'; -- 1 active, 0 not
+            read_n       <= '1'; -- 0 active, 1 not
+            config_done  <= '0'; -- not done
+
         elsif rising_edge(clk) then
-            case state is
-                when IDLE =>
+            case st is
+
+                when st_idle =>
                     config_done  <= '0';
                     byte_counter <= 0;
-                    chipselect   <= '1';  -- select usb_sync
+                    chipselect   <= '1';
                     read_n       <= '1';
                     if usb_rx_empty = '0' then
-                        state <= READ;
+                        st <= st_read;
                     end if;
 
-                when READ =>
-                    if usb_rx_empty = '0' then
-                        read_n <= '0';  -- pulse read
-                        tmp_data((PACKET_SIZE-1-byte_counter)*8+7 downto (PACKET_SIZE-1-byte_counter)*8) <= usb_readdata;
-                        byte_counter <= byte_counter + 1;
-                        if byte_counter = PACKET_SIZE-1 then
-                            state <= IDLE;
-                            config_done <= '1';
-                        end if;
+                when st_read =>
+                    read_n <= '0';   -- assert read for one clock
+                    st <= st_wait;
+
+                when st_wait =>
+                    read_n <= '1';   -- deassert read
+                    st <= st_store;  -- now data is valid next clock
+
+                when st_store =>
+                    -- Now store valid byte
+                    tmp_data(((PACKET_SIZE-1-byte_counter)*8+7) downto ((PACKET_SIZE-1-byte_counter)*8))
+                        <= usb_readdata;
+
+                    if byte_counter = PACKET_SIZE-1 then
+                        config_done  <= '1';
+                        byte_counter <= 0;
+                        st <= st_done;
                     else
-                        read_n <= '1';
+                        byte_counter <= byte_counter + 1;
+                        if usb_rx_empty = '0' then
+                            st <= st_read;
+                        else
+                            st <= st_idle;  -- wait until data available again
+                        end if;
                     end if;
-
+                
+                when st_done =>
+                    st <= st_done; -- from here the received packet
+                    chipselect  <= '0';
+                    read_n      <= '1';
+                    config_done <= '1';
+                    st <= st_done;
+                    
                 when others =>
-                    state <= IDLE;
+                    st <= st_idle;
 
             end case;
         end if;
