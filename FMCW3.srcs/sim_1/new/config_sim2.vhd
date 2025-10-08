@@ -2,13 +2,14 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.NUMERIC_STD.ALL;
 
-entity config_sim is
-end config_sim;
+entity config_sim2 is
+end config_sim2;
 
-architecture sim of config_sim is
+architecture sim of config_sim2 is
 
-    constant PACKET_SIZE : integer := 16;  -- shorter for easy viewing
+    constant PACKET_SIZE : integer := 8;  -- shorter for visibility in simulation
 
+    -- Signals for DUT
     signal clk          : std_logic := '0';
     signal reset        : std_logic := '1';
     signal usb_rx_empty : std_logic := '1';
@@ -18,33 +19,20 @@ architecture sim of config_sim is
     signal config_done  : std_logic;
     signal data_out     : std_logic_vector(PACKET_SIZE*8-1 downto 0);
 
+    -- Local FTDI simulation array
     type byte_array is array(0 to PACKET_SIZE-1) of std_logic_vector(7 downto 0);
-    signal ftdi_data : byte_array := (others => (others => '0'));
+    signal ftdi_data  : byte_array := (others => (others => '0'));
     signal data_index : integer := 0;
-
-    ----------------------------------------------------------------
-    -- DUT
-    ----------------------------------------------------------------
-    component config
-        generic (
-            PACKET_SIZE : integer := 16
-        );
-        port (
-            clk          : in  std_logic;
-            reset        : in  std_logic;
-            usb_rx_empty : in  std_logic;
-            usb_readdata : in  std_logic_vector(7 downto 0);
-            chipselect   : out std_logic;
-            read_n       : out std_logic;
-            config_done  : out std_logic;
-            data_out     : out std_logic_vector(PACKET_SIZE*8-1 downto 0)
-        );
-    end component;
 
 begin
 
-    DUT: config
-        generic map (PACKET_SIZE => PACKET_SIZE)
+    ----------------------------------------------------------------
+    -- Instantiate DUT
+    ----------------------------------------------------------------
+    DUT: entity work.config
+        generic map (
+            PACKET_SIZE => PACKET_SIZE
+        )
         port map (
             clk          => clk,
             reset        => reset,
@@ -57,7 +45,7 @@ begin
         );
 
     ----------------------------------------------------------------
-    -- 60 MHz clock (typical FT2232H)
+    -- Generate 60 MHz clock
     ----------------------------------------------------------------
     clk_proc: process
     begin
@@ -70,47 +58,72 @@ begin
     end process;
 
     ----------------------------------------------------------------
-    -- FTDI-like behavior
+    -- FTDI-like data source with bursts and pauses
     ----------------------------------------------------------------
     ftdi_proc: process
     begin
-        -- Reset
-        wait for 100 ns;
+        -- Initial reset
+        wait for 50 ns;
         reset <= '0';
-        wait for 100 ns;
+        wait for 50 ns;
 
-        -- Fill data
+        -- Fill FTDI buffer with sequential data
         for i in 0 to PACKET_SIZE-1 loop
             ftdi_data(i) <= std_logic_vector(to_unsigned(i, 8));
         end loop;
+        data_index <= 0;
 
-        usb_rx_empty <= '0';
+        -- Start: FIFO empty
+        usb_rx_empty <= '1';
         wait for 50 ns;
 
-        while data_index < PACKET_SIZE loop
+        -- === First burst: 5 bytes ===
+        usb_rx_empty <= '0';
+        for i in 0 to 2 loop
             wait until rising_edge(clk);
-
-            -- when FPGA asserts read_n low, present next byte
             if read_n = '0' then
                 usb_readdata <= ftdi_data(data_index);
                 data_index <= data_index + 1;
-
-                -- simulate intermittent empty condition
-                if (data_index mod 4) = 0 then
-                    usb_rx_empty <= '1'; -- pause for a while
-                    wait for 100 ns;
-                    usb_rx_empty <= '0'; -- data available again
-                end if;
             end if;
         end loop;
 
+        -- Pause: FIFO empty
         usb_rx_empty <= '1';
-        wait for 200 ns;
+        wait for 100 ns;
 
+        -- === Second burst: 6 bytes ===
+        usb_rx_empty <= '0';
+        for i in 0 to 5 loop
+            wait until rising_edge(clk);
+            if read_n = '0' then
+                usb_readdata <= ftdi_data(data_index);
+                data_index <= data_index + 1;
+            end if;
+        end loop;
+
+        -- Pause again
+        usb_rx_empty <= '1';
+        wait for 80 ns;
+
+        -- === Final burst: remaining bytes ===
+        usb_rx_empty <= '0';
+        while data_index < PACKET_SIZE loop
+            wait until rising_edge(clk);
+            if read_n = '0' then
+                usb_readdata <= ftdi_data(data_index);
+                data_index <= data_index + 1;
+            end if;
+        end loop;
+
+        -- FIFO empty after all bytes sent
+        usb_rx_empty <= '1';
+        wait for 50 ns;
+
+        -- Check if config_done asserted
         assert config_done = '1'
             report "Config not done after all bytes!" severity error;
 
-        report "FT2232H simulation finished successfully!" severity note;
+        report "Intermittent USB simulation finished successfully!" severity note;
         wait;
     end process;
 
