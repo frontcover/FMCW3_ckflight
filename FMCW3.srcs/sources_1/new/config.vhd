@@ -45,7 +45,7 @@ begin
 
                 when st_idle =>
                     config_done  <= '0';
-                    byte_counter <= 0;
+                    --byte_counter <= 0;
                     chipselect   <= '1';
                     read_n       <= '1';
                     if usb_rx_empty = '0' then
