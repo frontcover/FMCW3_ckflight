@@ -44,10 +44,11 @@ begin
             case st is
 
                 when st_idle =>
+                    
                     config_done  <= '0';
-                    --byte_counter <= 0;
                     chipselect   <= '1';
                     read_n       <= '1';
+                    
                     if usb_rx_empty = '0' then
                         st <= st_read;
                     end if;
@@ -61,14 +62,15 @@ begin
                     st <= st_store;  -- now data is valid next clock
 
                 when st_store =>
-                    -- Now store valid byte
+                    
+                    -- store valid byte
                     tmp_data((byte_counter*8+7) downto (byte_counter*8)) <= usb_readdata;
 
-                    if byte_counter = PACKET_SIZE-1 then
-                        byte_counter <= 0;
+                    if byte_counter = PACKET_SIZE-1 then                        
                         st <= st_done;
                     else
                         byte_counter <= byte_counter + 1;
+                                                
                         if usb_rx_empty = '0' then
                             st <= st_read;
                         else
@@ -76,12 +78,13 @@ begin
                         end if;
                     end if;
                 
-                when st_done =>
-                    st <= st_done; -- from here the received packet
+                when st_done =>                                        
+                    byte_counter <= 0;
                     chipselect  <= '0';
                     read_n      <= '1';
                     config_done <= '1';
-                    st <= st_done;
+
+                    st <= st_done; -- from here the received packet will be sent
                     
                 when others =>
                     st <= st_idle;

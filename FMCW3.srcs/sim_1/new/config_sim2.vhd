@@ -75,10 +75,11 @@ begin
 
         -- Start: FIFO empty
         usb_rx_empty <= '1';
-        wait for 50 ns;
+        wait for 100 ns;
 
         -- === First burst: 5 bytes ===
-        usb_rx_empty <= '0';
+        usb_rx_empty <= '0'; -- usb_sync says data has arrived so fifo not empty, can be read
+        
         for i in 0 to 2 loop
             wait until rising_edge(clk);
             if read_n = '0' then
