@@ -5,6 +5,10 @@ use IEEE.NUMERIC_STD.ALL;
 entity config_sim2 is
 end config_sim2;
 
+
+-- This simulation tries to mimic reception that does not happen in a periodic order.
+-- to see how state machine of the config behaves when data does not come for a while etc.
+
 architecture sim of config_sim2 is
 
     constant PACKET_SIZE : integer := 8;  -- shorter for visibility in simulation
