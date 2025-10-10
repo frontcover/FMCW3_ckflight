@@ -32,7 +32,7 @@ end control;
 architecture Behavioral of control is
 
     type state_type is (IDLE, RAMP, GAP_WAIT, USB_TX);
-    signal state, next_state : state_type;
+    signal state : state_type;
 
     -- Internal memory for ramp samples (16-bit A + 16-bit B)
     type mem_type is array (0 to MAX_SAMPLES-1) of std_logic_vector(31 downto 0);
@@ -68,28 +68,39 @@ begin
             usb_writedata  <= (others => '0');
 
         elsif rising_edge(clk) then
-            state <= next_state;
 
             case state is
 
                 when IDLE =>
+                
+                    -- adc off
                     adc_oe    <= "11";
                     adc_shdn  <= "11";
+                   
+                    -- pa off
                     pa_en     <= '0';
+                    
+                   -- usb write off
                     usb_chipselect <= '0';
                     usb_write_n    <= '1';
+                    
                     sample_idx <= 0;
                     usb_idx    <= 0;
+                    
+                    -- Check state
                     if muxout = '1' then
-                        next_state <= RAMP;
+                        state <= RAMP;
                     else
-                        next_state <= IDLE;
+                        state <= IDLE;
                     end if;
 
                 when RAMP =>
+                    -- Start sampling and enable pa
                     adc_oe    <= "00";
-                    adc_shdn  <= "00";
+                    adc_shdn  <= "00";                    
                     pa_en     <= '1';
+                    
+                    -- Write is not enabled during sampling
                     usb_chipselect <= '0';
                     usb_write_n    <= '1';
 
@@ -100,29 +111,37 @@ begin
                     end if;
 
                     if muxout = '0' then
-                        next_state <= GAP_WAIT;
+                        state <= GAP_WAIT;
                     else
-                        next_state <= RAMP;
+                        state <= RAMP;
                     end if;
 
                 when GAP_WAIT =>
+                
                     -- Disable ADC and PA
                     adc_oe    <= "11";
                     adc_shdn  <= "11";
-                    pa_en     <= '0';
+                    pa_en     <= '0';                    
+                    
+                    -- Start usb tx
                     usb_chipselect <= '1';
                     usb_write_n    <= '1';
+                    
                     usb_idx <= 0;
-                    next_state <= USB_TX;
+                    state <= USB_TX;
 
                 when USB_TX =>
+                
                     adc_oe    <= "11";
                     adc_shdn  <= "11";
                     pa_en     <= '0';
                     usb_chipselect <= '1';
 
+                    -- if usb tx fifo is not full and not all samples are transferred
                     if usb_tx_full = '0' and usb_idx < sample_idx then
+                    
                         -- send 32-bit sample as 4 bytes over USB
+                        -- Check this part
                         case usb_idx mod 4 is
                             when 0 => usb_writedata <= mem(usb_idx/4)(31 downto 24);
                             when 1 => usb_writedata <= mem(usb_idx/4)(23 downto 16);
@@ -130,20 +149,22 @@ begin
                             when 3 => usb_writedata <= mem(usb_idx/4)(7 downto 0);
                             when others => usb_writedata <= (others => '0');
                         end case;
+                        
                         usb_write_n <= '0';
                         usb_idx <= usb_idx + 1;
+                    
                     else
                         usb_write_n <= '1';
                     end if;
 
                     if usb_idx >= sample_idx * 4 then
-                        next_state <= IDLE;  -- all samples sent
+                        state <= IDLE;  -- all samples sent
                     else
-                        next_state <= USB_TX;
+                        state <= USB_TX;
                     end if;
 
                 when others =>
-                    next_state <= IDLE;
+                    state <= IDLE;
 
             end case;
         end if;
