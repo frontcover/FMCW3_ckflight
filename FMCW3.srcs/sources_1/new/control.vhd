@@ -131,6 +131,7 @@ begin
                     if usb_idx < sample_count and usb_tx_full = '0' then
                     
                         -- drive data for next byte
+                        -- adc stores 2 channel 16 bit data as concatenated 32 bit so select each byte
                         case byte_sel is
                             when 0      => usb_writedata <= mem(usb_idx)(31 downto 24);
                             when 1      => usb_writedata <= mem(usb_idx)(23 downto 16);
