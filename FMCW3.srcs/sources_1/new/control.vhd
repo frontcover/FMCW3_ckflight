@@ -4,7 +4,7 @@ use IEEE.NUMERIC_STD.ALL;
 
 entity control is
     generic (
-        MAX_SAMPLES : integer := 2048   -- maximum number of samples per ramp
+        MAX_SAMPLES : integer := 8192 
     );
     Port (
         clk        : in  std_logic;
@@ -37,10 +37,12 @@ architecture Behavioral of control is
     -- Internal memory for ramp samples (16-bit A + 16-bit B)
     type mem_type is array (0 to MAX_SAMPLES-1) of std_logic_vector(31 downto 0);
     signal mem        : mem_type := (others => (others => '0'));
-    signal sample_idx : integer range 0 to MAX_SAMPLES-1 := 0;
-    signal usb_idx    : integer range 0 to MAX_SAMPLES-1 := 0;
+    signal sample_idx : integer range 0 to MAX_SAMPLES-1 := 0; -- Used during sampling to store data
+    signal byte_sel   : integer range 0 to 3 := 0;    
+    signal usb_idx    : integer range 0 to MAX_SAMPLES-1 := 0; -- used during usb transmission
+    signal sample_count : integer range 0 to MAX_SAMPLES-1 := 0;
     signal adc_latched: std_logic_vector(31 downto 0);
-
+    
 begin
 
     -- Latch ADC data when valid
@@ -57,15 +59,16 @@ begin
     process(clk, reset)
     begin
         if reset = '1' then
-            state       <= IDLE;
-            sample_idx  <= 0;
-            usb_idx     <= 0;
-            adc_oe      <= "11";
-            adc_shdn    <= "11";
-            pa_en       <= '0';
-            usb_chipselect <= '0';
-            usb_write_n    <= '1';
-            usb_writedata  <= (others => '0');
+            state           <= IDLE;
+            sample_idx      <= 0;
+            sample_count    <= 0;
+            usb_idx         <= 0;
+            adc_oe          <= "11";
+            adc_shdn        <= "11";
+            pa_en           <= '0';
+            usb_chipselect  <= '0';
+            usb_write_n     <= '1';
+            usb_writedata   <= (others => '0');
 
         elsif rising_edge(clk) then
 
@@ -111,6 +114,7 @@ begin
                     end if;
 
                     if muxout = '0' then
+                        sample_count <= sample_idx;
                         state <= GAP_WAIT;
                     else
                         state <= RAMP;
@@ -135,29 +139,37 @@ begin
                     adc_oe    <= "11";
                     adc_shdn  <= "11";
                     pa_en     <= '0';
-                    usb_chipselect <= '1';
+                    
 
                     -- if usb tx fifo is not full and not all samples are transferred
-                    if usb_tx_full = '0' and usb_idx < sample_idx then
-                    
+                    if usb_tx_full = '0' and usb_idx < sample_count then                                                
+                        
                         -- send 32-bit sample as 4 bytes over USB
                         -- Check this part
-                        case usb_idx mod 4 is
-                            when 0 => usb_writedata <= mem(usb_idx/4)(31 downto 24);
-                            when 1 => usb_writedata <= mem(usb_idx/4)(23 downto 16);
-                            when 2 => usb_writedata <= mem(usb_idx/4)(15 downto 8);
-                            when 3 => usb_writedata <= mem(usb_idx/4)(7 downto 0);
+                        case byte_sel is
+                            when 0      => usb_writedata <= mem(usb_idx)(31 downto 24);
+                            when 1      => usb_writedata <= mem(usb_idx)(23 downto 16);
+                            when 2      => usb_writedata <= mem(usb_idx)(15 downto 8);
+                            when 3      => usb_writedata <= mem(usb_idx)(7 downto 0);
                             when others => usb_writedata <= (others => '0');
-                        end case;
+                        end case;                                                
+                                                                        
+                        if byte_sel = 3 then
+                            byte_sel <= 0;
+                            usb_idx <= usb_idx + 1;
+                        else
+                            byte_sel <= byte_sel + 1;
+                        end if;
                         
+                        -- Enable usb write
+                        usb_chipselect <= '1';
                         usb_write_n <= '0';
-                        usb_idx <= usb_idx + 1;
-                    
+                                            
                     else
                         usb_write_n <= '1';
                     end if;
 
-                    if usb_idx >= sample_idx * 4 then
+                    if usb_idx >= sample_count then
                         state <= IDLE;  -- all samples sent
                     else
                         state <= USB_TX;
