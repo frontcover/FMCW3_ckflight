@@ -133,7 +133,7 @@ architecture Behavioral of top_module is
     
     component control is
     generic (
-        MAX_SAMPLES : integer := 2048  -- number of decimated samples per ramp
+        MAX_SAMPLES : integer := 8192  -- number of decimated samples per ramp
     );
     port (
         clk          : in  std_logic;               -- system clock
@@ -145,6 +145,7 @@ architecture Behavioral of top_module is
         adc_oe       : out std_logic_vector(1 downto 0);
         adc_shdn     : out std_logic_vector(1 downto 0);
         pa_en        : out std_logic;
+        config_done  : in std_logic;
         usb_write_n  : out std_logic;
         usb_chipselect : out std_logic;
         usb_writedata : out std_logic_vector(7 downto 0);
@@ -338,6 +339,7 @@ begin
         adc_oe         => ADC_OE,
         adc_shdn       => ADC_SHDN,
         pa_en          => PA_EN,
+        config_done    => s_config_done,
         usb_write_n    => s_control_usb_write_n,
         usb_chipselect => s_control_usb_chipselect,
         usb_writedata  => s_control_usb_writedata,
