@@ -114,7 +114,7 @@ begin
                     adc_oe          <= "11";
                     adc_shdn        <= "11";
                     pa_en           <= '0';
-                    usb_chipselect  <= '1';
+                    usb_chipselect  <= '0';
                     usb_write_n     <= '1';
                     usb_idx         <= 0;
                     byte_sel        <= 0;
@@ -142,7 +142,7 @@ begin
                         state <= USB_TX_PULSE;
                     
                     elsif usb_idx >= sample_count then
-                        -- usb transfer can be done before gap is finished so return to idle and wait ramp
+                        -- usb transfer send all bytes before gap is finished so return to idle and wait ramp is correct way.
                         state <= IDLE;
                     end if;
 
