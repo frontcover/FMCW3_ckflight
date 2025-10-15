@@ -6,47 +6,47 @@ use IEEE.NUMERIC_STD.ALL;
 entity top_module is
     Port ( 
         -- Clocks & Reset
-        SYSCLK       : in std_logic; -- ECS-TXO-3225MV 40 MHz
-        USB_CLKOUT   : in std_logic; -- 60 mhz clock from ft2232h to drive logic
-        RESET        : in std_logic; -- idle high, active low
+        SYSCLK          : in std_logic; -- ECS-TXO-3225MV 40 MHz
+        USB_CLKOUT      : in std_logic; -- 60 mhz clock from ft2232h to drive logic
+        RESET           : in std_logic; -- idle high, active low
 
         -- ADF4158
-        ADF_CE       : out std_logic;   -- Controlled by pin0 of 16 bit gpio out of microblaze and written 1 in microblaze to enable device once
-        ADF_TXDATA   : out std_logic;   -- not used = 0
-        ADF_CLK      : out std_logic;   -- SPI CLK
-        ADF_DATA     : out std_logic;   -- SPI MOSI
-        ADF_DONE     : in std_logic;    -- DNP Mosfet connection. Not used
-        ADF_LE       : out std_logic;   -- Chip Enable / Select for SPI device 
-        ADF_MUXOUT   : in std_logic;    -- Read rampDel length high pulse on this pin to know ramp start and end
+        ADF_CE          : out std_logic;   -- Controlled by pin0 of 16 bit gpio out of microblaze and written 1 in microblaze to enable device once
+        ADF_TXDATA      : out std_logic;   -- not used = 0
+        ADF_CLK         : out std_logic;   -- SPI CLK
+        ADF_DATA        : out std_logic;   -- SPI MOSI
+        ADF_DONE        : in std_logic;    -- DNP Mosfet connection. Not used
+        ADF_LE          : out std_logic;   -- Chip Enable / Select for SPI device 
+        ADF_MUXOUT      : in std_logic;    -- Read rampDel length high pulse on this pin to know ramp start and end
 
         -- LTC2292 ADC
-        ADC_DATA     : in std_logic_vector(11 downto 0);
-        ADC_OF       : in std_logic_vector(1 downto 0); -- adc outputs 1 when overflow underflow (saturation) occurs.
-        ADC_OE       : out std_logic_vector(1 downto 0);
-        ADC_SHDN     : out std_logic_vector(1 downto 0);
+        ADC_DATA        : in std_logic_vector(11 downto 0);
+        ADC_OF          : in std_logic_vector(1 downto 0); -- adc outputs 1 when overflow underflow (saturation) occurs.
+        ADC_OE          : out std_logic_vector(1 downto 0);
+        ADC_SHDN        : out std_logic_vector(1 downto 0);
 
         -- FT2232H USB
-        USB_DATA     : inout std_logic_vector(7 downto 0);
-        USB_RXF      : in std_logic;
-        USB_TXE      : in std_logic;
-        USB_RD       : out std_logic;
-        USB_WR       : out std_logic;
-        USB_SIWUA    : out std_logic; -- write 1 to not used 
-        USB_OE       : out std_logic;
-        USB_SUSPEND  : in std_logic; -- input to indicate if usb is in suspend mode (not used)
+        USB_DATA        : inout std_logic_vector(7 downto 0);
+        USB_RXF         : in std_logic;
+        USB_TXE         : in std_logic;
+        USB_RD          : out std_logic;
+        USB_WR          : out std_logic;
+        USB_SIWUA       : out std_logic; -- write 1 to not used 
+        USB_OE          : out std_logic;
+        USB_SUSPEND     : in std_logic; -- input to indicate if usb is in suspend mode (not used)
 
         -- Onboard LED
-        LED1         : out std_logic;
+        LED1            : out std_logic;
 
         -- TQP5525 PA
-        PA_EN        : out std_logic;
+        PA_EN           : out std_logic;
 
         -- ADL5802 Mixer
-        MIX_EN       : out std_logic;
+        MIX_EN          : out std_logic;
 
         -- External Connectors
-        EXT1         : out std_logic_vector(5 downto 0);
-        EXT2         : out std_logic_vector(5 downto 0);
+        EXT1            : out std_logic_vector(5 downto 0);
+        EXT2            : out std_logic_vector(5 downto 0);
 
         -- SD Card
         SD_DATA         : inout std_logic_vector(3 downto 0);
@@ -55,9 +55,9 @@ entity top_module is
         SD_CARD_DETECT  : in std_logic;
 
         -- SPI Flash
-        SPI_CS       : out std_logic;
-        SPI_MOSI     : out std_logic;
-        SPI_MISO     : in std_logic
+        SPI_CS          : out std_logic;
+        SPI_MOSI        : out std_logic;
+        SPI_MISO        : in std_logic
 
     );
 end top_module;
@@ -83,11 +83,11 @@ architecture Behavioral of top_module is
     
     component adc is
     Port( 
-        clk : in STD_LOGIC;
-        adc_data : in STD_LOGIC_VECTOR (11 downto 0);
-        data_a : out STD_LOGIC_VECTOR (15 downto 0);
-        data_b : out STD_LOGIC_VECTOR (15 downto 0);
-        valid : out STD_LOGIC
+        clk         : in STD_LOGIC;
+        adc_data    : in STD_LOGIC_VECTOR (11 downto 0);
+        data_a      : out STD_LOGIC_VECTOR (15 downto 0);
+        data_b      : out STD_LOGIC_VECTOR (15 downto 0);
+        valid       : out STD_LOGIC
     );
     end component adc;
     
@@ -117,23 +117,24 @@ architecture Behavioral of top_module is
     
     component config is
         generic (
-            PACKET_SIZE : integer := 64  -- must match the entity
+            PACKET_SIZE     : integer := 256  -- must match the entity
         );
         port (
-            clk          : in  std_logic;
-            reset        : in  std_logic;
-            usb_rx_empty : in  std_logic;
-            usb_readdata : in  std_logic_vector(7 downto 0);
-            chipselect   : out std_logic;
-            read_n       : out std_logic;
-            config_done  : out std_logic;
-            data_out     : out std_logic_vector(PACKET_SIZE*8-1 downto 0)
+            clk             : in  std_logic;
+            reset           : in  std_logic;
+            usb_rx_empty    : in  std_logic;
+            usb_readdata    : in  std_logic_vector(7 downto 0);
+            chipselect      : out std_logic;
+            read_n          : out std_logic;
+            config_done     : out std_logic;
+            data_out        : out std_logic_vector(PACKET_SIZE*8-1 downto 0);
+            control_done    : in std_logic -- will be used to reset config logic so it can restart listening python
         );
     end component;
     
     component control is
     generic (
-        MAX_SAMPLES : integer := 8192  -- number of decimated samples per ramp
+        MAX_SAMPLES                 : integer := 8192  -- number of decimated samples per ramp
     );
     port (
         clk                         : in  std_logic; -- system clock
@@ -166,11 +167,11 @@ architecture Behavioral of top_module is
 
     component ila_0
     PORT (
-        clk : IN STD_LOGIC;                
-        probe0 : IN STD_LOGIC_VECTOR(7 DOWNTO 0);
-        probe1 : IN STD_LOGIC_VECTOR(11 DOWNTO 0);
-        probe2 : IN STD_LOGIC_VECTOR(31 DOWNTO 0);
-        probe3 : IN STD_LOGIC_VECTOR(9 DOWNTO 0)
+        clk         : IN STD_LOGIC;                
+        probe0      : IN STD_LOGIC_VECTOR(7 DOWNTO 0);
+        probe1      : IN STD_LOGIC_VECTOR(11 DOWNTO 0);
+        probe2      : IN STD_LOGIC_VECTOR(31 DOWNTO 0);
+        probe3      : IN STD_LOGIC_VECTOR(9 DOWNTO 0)
     );
     end component;
     
@@ -200,11 +201,11 @@ architecture Behavioral of top_module is
     signal s_config_usb_read_n      : std_logic;
 
     -- Signals for control
-    signal s_control_usb_write_n    : std_logic;
-    signal s_control_usb_chipselect : std_logic;
-    signal s_control_usb_writedata  : std_logic_vector(7 downto 0);
+    signal s_control_usb_write_n     : std_logic;
+    signal s_control_usb_chipselect  : std_logic;
+    signal s_control_usb_writedata   : std_logic_vector(7 downto 0);
     signal s_control_microblaze_done : std_logic;
-    signal s_control_done           : std_logic;
+    signal s_control_done            : std_logic;
     
     -- ILA Probe signals
     signal s_probe0 : std_logic_vector(7 DOWNTO 0);
@@ -246,9 +247,9 @@ begin
         
     ADF_TXDATA <= '0'; -- not used. this is for data modulation
         
-    ADF_CE              <= s_gpio_rtl_0_tri_o(0); -- microblaze 16 bit gpio's bit 0 is controlling this. It will be written 1 to power device
-    ADF_LE              <= s_gpio_rtl_0_tri_o(1); -- microblaze 16 bit gpio's bit 1 is spi_cs of adf4158
-    s_microblaze_done   <= s_gpio_rtl_0_tri_o(2); -- microblaze 16 bit gpio's bit 2 is microblaze's done signal to finish sampling
+    ADF_CE                      <= s_gpio_rtl_0_tri_o(0); -- microblaze 16 bit gpio's bit 0 is controlling this. It will be written 1 to power device
+    ADF_LE                      <= s_gpio_rtl_0_tri_o(1); -- microblaze 16 bit gpio's bit 1 is spi_cs of adf4158
+    s_control_microblaze_done   <= s_gpio_rtl_0_tri_o(2); -- microblaze 16 bit gpio's bit 2 is microblaze's done signal to finish sampling
     
     
     -- connect chipselect according to if config is done or not.
@@ -335,13 +336,14 @@ begin
         chipselect   => s_config_usb_chipselect,
         read_n       => s_config_usb_read_n,
         config_done  => s_config_done,
-        data_out     => s_config_data
+        data_out     => s_config_data,
+        control_done => s_control_done
     );
     
     -- Control FSM instantiation    
     control_i : control
     generic map (
-        MAX_SAMPLES => 2048  -- adjust according to ramp length
+        MAX_SAMPLES => 8192  -- adjust according to ramp length
     )
     port map (
         clk                         => SYSCLK,
