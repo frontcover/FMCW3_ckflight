@@ -8,13 +8,14 @@ entity config is
     );
     port (
         clk          : in  std_logic;
-        reset        : in  std_logic;
+        reset        : in  std_logic;        
         usb_rx_empty : in  std_logic;
         usb_readdata : in  std_logic_vector(7 downto 0);
         chipselect   : out std_logic;
         read_n       : out std_logic;
         config_done  : out std_logic;
-        data_out     : out std_logic_vector(PACKET_SIZE*8-1 downto 0)
+        data_out     : out std_logic_vector(PACKET_SIZE*8-1 downto 0);
+        control_done : in std_logic     -- will be used to reset config logic so it can restart listening python
     );
 end config;
 

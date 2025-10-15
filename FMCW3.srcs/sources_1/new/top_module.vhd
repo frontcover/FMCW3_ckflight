@@ -203,7 +203,9 @@ architecture Behavioral of top_module is
     signal s_control_usb_write_n    : std_logic;
     signal s_control_usb_chipselect : std_logic;
     signal s_control_usb_writedata  : std_logic_vector(7 downto 0);
-
+    signal s_control_microblaze_done : std_logic;
+    signal s_control_done           : std_logic;
+    
     -- ILA Probe signals
     signal s_probe0 : std_logic_vector(7 DOWNTO 0);
     signal s_probe1 : std_logic_vector(11 DOWNTO 0);
@@ -244,8 +246,10 @@ begin
         
     ADF_TXDATA <= '0'; -- not used. this is for data modulation
         
-    ADF_CE      <= s_gpio_rtl_0_tri_o(0); -- microblaze 16 bit gpio's bit 0 is controlling this. It will be written 1 to power device
-    ADF_LE      <= s_gpio_rtl_0_tri_o(1); -- microblaze 16 bit gpio's bit 1 is spi_cs of adf4158
+    ADF_CE              <= s_gpio_rtl_0_tri_o(0); -- microblaze 16 bit gpio's bit 0 is controlling this. It will be written 1 to power device
+    ADF_LE              <= s_gpio_rtl_0_tri_o(1); -- microblaze 16 bit gpio's bit 1 is spi_cs of adf4158
+    s_microblaze_done   <= s_gpio_rtl_0_tri_o(2); -- microblaze 16 bit gpio's bit 2 is microblaze's done signal to finish sampling
+    
     
     -- connect chipselect according to if config is done or not.
     -- if config is done then usb control can start using usb
@@ -340,20 +344,26 @@ begin
         MAX_SAMPLES => 2048  -- adjust according to ramp length
     )
     port map (
-        clk            => SYSCLK,
-        reset          => RESET,
-        muxout         => muxout_sync,     -- ADF4158 MUXOUT input high pulse during ramp
-        adc_data_a     => s_adc_a_out,
-        adc_data_b     => s_adc_b_out,
-        adc_valid      => s_adc_valid,
-        adc_oe         => ADC_OE,
-        adc_shdn       => ADC_SHDN,
-        pa_en          => PA_EN,
-        config_done    => s_config_done,
-        usb_write_n    => s_control_usb_write_n,
-        usb_chipselect => s_control_usb_chipselect,
-        usb_writedata  => s_control_usb_writedata,
-        usb_tx_full    => s_tx_full
+        clk                         => SYSCLK,
+        reset                       => RESET,
+        muxout                      => muxout_sync,     -- ADF4158 MUXOUT input high pulse during ramp
+        
+        adc_data_a                  => s_adc_a_out,
+        adc_data_b                  => s_adc_b_out,
+        adc_valid                   => s_adc_valid,
+        adc_oe                      => ADC_OE,
+        adc_shdn                    => ADC_SHDN,
+        
+        pa_en                       => PA_EN,
+        config_done                 => s_config_done,   -- input from config module to start sampling
+        
+        usb_write_n                 => s_control_usb_write_n,
+        usb_chipselect              => s_control_usb_chipselect,
+        usb_writedata               => s_control_usb_writedata,
+        usb_tx_full                 => s_tx_full,
+        
+        microblaze_sampling_done    => s_control_microblaze_done,
+        control_done                => s_control_done   -- output from control module to config to start listening new python commands
     );
 
     ila_0_i : ila_0
