@@ -136,20 +136,30 @@ architecture Behavioral of top_module is
         MAX_SAMPLES : integer := 8192  -- number of decimated samples per ramp
     );
     port (
-        clk          : in  std_logic;               -- system clock
-        reset        : in  std_logic;               -- active high reset
-        muxout       : in  std_logic;               -- high during ramp
-        adc_data_a   : in  std_logic_vector(15 downto 0);
-        adc_data_b   : in  std_logic_vector(15 downto 0);
-        adc_valid    : in  std_logic;
-        adc_oe       : out std_logic_vector(1 downto 0);
-        adc_shdn     : out std_logic_vector(1 downto 0);
-        pa_en        : out std_logic;
-        config_done  : in std_logic;
-        usb_write_n  : out std_logic;
-        usb_chipselect : out std_logic;
-        usb_writedata : out std_logic_vector(7 downto 0);
-        usb_tx_full   : in  std_logic
+        clk                         : in  std_logic; -- system clock
+        reset                       : in  std_logic; -- active high reset
+        muxout                      : in  std_logic; -- high during ramp
+
+        -- ADC inputs
+        adc_data_a                  : in  std_logic_vector(15 downto 0);
+        adc_data_b                  : in  std_logic_vector(15 downto 0);
+        adc_valid                   : in  std_logic;
+
+        -- ADC control outputs
+        adc_oe                      : out std_logic_vector(1 downto 0);
+        adc_shdn                    : out std_logic_vector(1 downto 0);
+        pa_en                       : out std_logic;
+        config_done                 : in std_logic;
+
+        -- USB interface
+        usb_chipselect              : out std_logic;
+        usb_write_n                 : out std_logic;
+        usb_writedata               : out std_logic_vector(7 downto 0);
+        usb_tx_full                 : in  std_logic;
+        
+        microblaze_sampling_done    : in std_logic; -- microblaze will calculate total sampling time and tell control module to stop sampling
+        control_done                : out std_logic -- control sends done to other modules (config for now) so it can talk to python again for new run
+
     );  
     end component;
 
