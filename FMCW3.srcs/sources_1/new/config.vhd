@@ -33,7 +33,7 @@ begin
 
     process(clk, reset)
     begin
-        if reset = '1' then
+        if reset = '1' or control_done = '1' then
             st           <= st_idle;
             byte_counter <= 0;
             tmp_data     <= (others => '0');
@@ -42,6 +42,7 @@ begin
             config_done  <= '0'; -- not done
 
         elsif rising_edge(clk) then
+            
             case st is
 
                 when st_idle =>
