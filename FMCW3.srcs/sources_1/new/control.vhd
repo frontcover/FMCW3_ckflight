@@ -26,7 +26,9 @@ entity control is
         usb_chipselect : out std_logic;
         usb_write_n    : out std_logic;
         usb_writedata  : out std_logic_vector(7 downto 0);
-        usb_tx_full    : in  std_logic
+        usb_tx_full    : in  std_logic;
+        
+        microblaze_sampling_done : in std_logic
     );
 end control;
 
@@ -58,7 +60,9 @@ begin
 
     -- FSM sequential
     process(clk, reset)
+    
     begin
+    
         if reset = '1' then
             state           <= IDLE;
             sample_idx      <= 0;
@@ -87,8 +91,13 @@ begin
                     usb_idx         <= 0;
                     byte_sel        <= 0;
                     
-                    if muxout = '1' and config_done = '1' then
+                    -- When microblaze sends high to indicate that N seconds of sampling radar is done
+                    -- the control logic stays in IDLE state.
+                    -- Later config_done must be resetted since new radar recording can be started with new features.
+                    if muxout = '1' and config_done = '1' and microblaze_sampling_done = '0' then
                         state <= RAMP;
+                    else
+                        state <= IDLE;
                     end if;
 
                 when RAMP =>
