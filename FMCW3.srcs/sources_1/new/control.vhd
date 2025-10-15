@@ -4,31 +4,33 @@ use IEEE.NUMERIC_STD.ALL;
 
 entity control is
     generic (
-        MAX_SAMPLES : integer := 8192 
+        MAX_SAMPLES                 : integer := 8192 
     );
     Port (
-        clk        : in  std_logic;
-        reset      : in  std_logic;
-        muxout     : in  std_logic;
+        clk                         : in  std_logic;
+        reset                       : in  std_logic;
+        muxout                      : in  std_logic;
 
         -- ADC inputs
-        adc_data_a : in  std_logic_vector(15 downto 0);
-        adc_data_b : in  std_logic_vector(15 downto 0);
-        adc_valid  : in  std_logic;
+        adc_data_a                  : in  std_logic_vector(15 downto 0);
+        adc_data_b                  : in  std_logic_vector(15 downto 0);
+        adc_valid                   : in  std_logic;
 
         -- ADC control outputs
-        adc_oe      : out std_logic_vector(1 downto 0);
-        adc_shdn    : out std_logic_vector(1 downto 0);
-        pa_en       : out std_logic;
-        config_done : in std_logic;
+        adc_oe                      : out std_logic_vector(1 downto 0);
+        adc_shdn                    : out std_logic_vector(1 downto 0);
+        pa_en                       : out std_logic;
+        config_done                 : in std_logic;
 
         -- USB interface
-        usb_chipselect : out std_logic;
-        usb_write_n    : out std_logic;
-        usb_writedata  : out std_logic_vector(7 downto 0);
-        usb_tx_full    : in  std_logic;
+        usb_chipselect              : out std_logic;
+        usb_write_n                 : out std_logic;
+        usb_writedata               : out std_logic_vector(7 downto 0);
+        usb_tx_full                 : in  std_logic;
         
-        microblaze_sampling_done : in std_logic
+        microblaze_sampling_done    : in std_logic;
+        control_done                : out std_logic
+
     );
 end control;
 
@@ -40,13 +42,20 @@ architecture Behavioral of control is
     -- Internal memory for ramp samples (16-bit A + 16-bit B)
     type mem_type is array (0 to MAX_SAMPLES-1) of std_logic_vector(31 downto 0);
     signal mem        : mem_type := (others => (others => '0'));
+    
     signal sample_idx : integer range 0 to MAX_SAMPLES-1 := 0; -- Used during sampling to store data
     signal byte_sel   : integer range 0 to 3 := 0;    
     signal usb_idx    : integer range 0 to MAX_SAMPLES-1 := 0; -- used during usb transmission
+    
     signal sample_count : integer range 0 to MAX_SAMPLES-1 := 0;
+    
     signal adc_latched: std_logic_vector(31 downto 0);
+    
+    signal s_control_done : std_logic := '0';
 
 begin
+
+    control_done <= s_control_done;
 
     -- Latch ADC data when valid
     process(clk)
@@ -75,6 +84,7 @@ begin
             usb_chipselect  <= '0';
             usb_write_n     <= '1';
             usb_writedata   <= (others => '0');
+            s_control_done  <= '0';
 
         elsif rising_edge(clk) then
             
@@ -94,10 +104,14 @@ begin
                     -- When microblaze sends high to indicate that N seconds of sampling radar is done
                     -- the control logic stays in IDLE state.
                     -- Later config_done must be resetted since new radar recording can be started with new features.
+                    
+                    -- To reset these logics i need to send a signal to config module as well to indicate that control is done etc. so config can start listening python again
                     if muxout = '1' and config_done = '1' and microblaze_sampling_done = '0' then
                         state <= RAMP;
+                        s_control_done <= '0';
                     else
                         state <= IDLE;
+                        s_control_done <= '1';
                     end if;
 
                 when RAMP =>
