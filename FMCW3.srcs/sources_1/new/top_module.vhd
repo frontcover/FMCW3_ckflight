@@ -3,7 +3,13 @@ use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.NUMERIC_STD.ALL;
 
 
-entity top_module is
+entity top_module is        
+    
+    generic (
+        CONFIG_PACKET_SIZE  : integer := 256;    -- Used by config
+        MAX_ADC_SAMPLES     : integer := 2400    -- Used by control
+    );
+    
     Port ( 
         -- Clocks & Reset
         SYSCLK          : in std_logic; -- ECS-TXO-3225MV 40 MHz
@@ -117,7 +123,7 @@ architecture Behavioral of top_module is
     
     component config is
         generic (
-            PACKET_SIZE     : integer := 256  -- must match the entity
+            PACKET_SIZE     : integer := CONFIG_PACKET_SIZE
         );
         port (
             clk             : in  std_logic;
@@ -134,7 +140,7 @@ architecture Behavioral of top_module is
     
     component control is
     generic (
-        MAX_SAMPLES                 : integer := 8192  -- number of decimated samples per ramp
+        MAX_SAMPLES                 : integer := MAX_ADC_SAMPLES -- number of decimated samples per ramp
     );
     port (
         clk                         : in  std_logic; -- system clock
@@ -194,7 +200,7 @@ architecture Behavioral of top_module is
         
     -- CONFIG signals
     signal s_config_done            : std_logic;   
-    signal s_config_data            : std_logic_vector(511 downto 0);
+    signal s_config_data            : std_logic_vector(CONFIG_PACKET_SIZE*8-1 downto 0);
     signal s_config_usb_readdata    : std_logic_vector(7 downto 0);
     signal s_config_usb_chipselect  : std_logic;
     signal s_config_usb_read_n      : std_logic;
@@ -324,9 +330,9 @@ begin
     );
 
     config_i : component config
-    generic map (
-        PACKET_SIZE => 64
-    )
+    --generic map (
+      --  PACKET_SIZE => CONFIG_PACKET_SIZE
+    --)
     port map (
         clk          => SYSCLK,
         reset        => RESET,        -- top-level reset signal
@@ -341,9 +347,9 @@ begin
     
     -- Control FSM instantiation    
     control_i : control
-    generic map (
-        MAX_SAMPLES => 8192  -- adjust according to ramp length
-    )
+    --generic map (
+      --  MAX_SAMPLES => MAX_ADC_SAMPLES  -- adjust according to ramp length
+    --)
     port map (
         clk                         => SYSCLK,
         reset                       => RESET,

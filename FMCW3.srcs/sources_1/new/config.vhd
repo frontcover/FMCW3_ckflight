@@ -33,6 +33,8 @@ begin
 
     process(clk, reset)
     begin
+        
+        -- if reset or control modules sampling is done then config can start listening to python again
         if reset = '1' or control_done = '1' then
             st           <= st_idle;
             byte_counter <= 0;

@@ -17,7 +17,8 @@ architecture sim of config_sim is
     signal read_n       : std_logic;
     signal config_done  : std_logic;
     signal data_out     : std_logic_vector(PACKET_SIZE*8-1 downto 0);
-
+    signal control_done : std_logic := '0';
+    
     -- Local FTDI simulation variables
     type byte_array is array(0 to PACKET_SIZE-1) of std_logic_vector(7 downto 0);
     signal ftdi_data  : byte_array := (others => (others => '0'));
@@ -38,7 +39,8 @@ architecture sim of config_sim is
             chipselect   : out std_logic;
             read_n       : out std_logic;
             config_done  : out std_logic;
-            data_out     : out std_logic_vector(PACKET_SIZE*8-1 downto 0)
+            data_out     : out std_logic_vector(PACKET_SIZE*8-1 downto 0);
+            control_done : in std_logic     -- will be used to reset config logic so it can restart listening python
         );
     end component;
 
@@ -58,7 +60,8 @@ begin
             chipselect   => chipselect,
             read_n       => read_n,
             config_done  => config_done,
-            data_out     => data_out
+            data_out     => data_out,
+            control_done => control_done
         );
 
     --------------------------------------------------------------------

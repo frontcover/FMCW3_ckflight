@@ -52,6 +52,10 @@ architecture Behavioral of control is
     signal adc_latched: std_logic_vector(31 downto 0);
     
     signal s_control_done : std_logic := '0';
+    
+    signal s_usb_tx_done : std_logic := '0'; -- to prevent stopping and sending control done before sending last ramps all bytes.
+    signal mb_done_latched : std_logic := '0'; -- if microblaze signal is a short 0 1 0 pulse then this code cannot see it so i register it.
+
 
 begin
 
@@ -66,6 +70,21 @@ begin
             end if;
         end if;
     end process;
+
+    -- Latch MicroBlaze short pulse
+    process(clk, reset)
+    begin
+        if reset = '1' then
+            mb_done_latched <= '0';
+        elsif rising_edge(clk) then
+            if microblaze_sampling_done = '1' then
+                mb_done_latched <= '1';
+            elsif s_control_done = '1' then
+                mb_done_latched <= '0';
+            end if;
+        end if;
+    end process;
+    
 
     -- FSM sequential
     process(clk, reset)
@@ -109,7 +128,9 @@ begin
                     if muxout = '1' and config_done = '1' and microblaze_sampling_done = '0' then
                         state <= RAMP;
                         s_control_done <= '0';
-                    else
+                        s_usb_tx_done <= '0';
+                    
+                    elsif mb_done_latched = '1' and s_usb_tx_done = '1' then --
                         state <= IDLE;
                         s_control_done <= '1';
                     end if;
@@ -168,6 +189,8 @@ begin
                     elsif usb_idx >= sample_count then
                         -- usb transfer send all bytes before gap is finished so return to idle and wait ramp is correct way.
                         state <= IDLE;
+                        s_usb_tx_done <= '1';      -- <-- Latch USB transfer done here
+
                     end if;
 
                 -- USB_TX_PULSE: pulse write_n low for 1 clock

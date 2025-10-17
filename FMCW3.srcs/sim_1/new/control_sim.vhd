@@ -24,10 +24,14 @@ architecture sim of control_sim is
     signal usb_write_n    : std_logic;
     signal usb_writedata  : std_logic_vector(7 downto 0);
     signal usb_tx_full    : std_logic := '0';
+    signal microblaze_sampling_done : std_logic := '0';
+    signal control_done : std_logic := '0';
 
 begin
 
-    -- Instantiate DUT
+    -------------------------------------------------------------------------
+    -- DUT INSTANTIATION
+    -------------------------------------------------------------------------
     DUT: entity work.control
         port map (
             clk => clk,
@@ -43,10 +47,14 @@ begin
             usb_chipselect => usb_chipselect,
             usb_write_n => usb_write_n,
             usb_writedata => usb_writedata,
-            usb_tx_full => usb_tx_full
+            usb_tx_full => usb_tx_full,
+            microblaze_sampling_done => microblaze_sampling_done,
+            control_done => control_done 
         );
 
-    -- Clock generation
+    -------------------------------------------------------------------------
+    -- CLOCK GENERATION
+    -------------------------------------------------------------------------
     clk_process: process
     begin
         while true loop
@@ -57,37 +65,63 @@ begin
         end loop;
     end process;
 
-    -- Stimulus process
+    -------------------------------------------------------------------------
+    -- STIMULUS PROCESS
+    -------------------------------------------------------------------------
     stimulus: process
     begin
-        -- Reset DUT
+        ---------------------------------------------------------------------
+        -- PHASE 1: RESET AND CONFIGURATION
+        ---------------------------------------------------------------------
+        report "Simulation started - resetting DUT";
         reset <= '1';
         wait for 2*CLK_PERIOD;
         reset <= '0';
-        wait for CLK_PERIOD;
+        report "Reset released";
 
-        -- Enable config_done
+        wait for 5*CLK_PERIOD;
         config_done <= '1';
-        wait for CLK_PERIOD;
+        report "Configuration done signal set HIGH";
 
-        -- Start ramp phase
+        ---------------------------------------------------------------------
+        -- PHASE 2: ACTIVE SAMPLING PHASE
+        ---------------------------------------------------------------------
         muxout <= '1';
-        for i in 0 to 9 loop
+        report "MUXOUT HIGH - Sampling started";
+
+        for i in 0 to 15 loop
             adc_data_a <= std_logic_vector(to_unsigned(i*10, 16));
             adc_data_b <= std_logic_vector(to_unsigned(i*20, 16));
             adc_valid  <= '1';
             wait for CLK_PERIOD;
         end loop;
 
-        -- End ramp phase
         adc_valid <= '0';
         muxout <= '0';
+        report "Sampling phase complete, waiting for MicroBlaze command";
+
+        ---------------------------------------------------------------------
+        -- PHASE 3: MICRO-BLAZE STOPS SAMPLING
+        ---------------------------------------------------------------------
+        wait for 20*CLK_PERIOD;
+        microblaze_sampling_done <= '1';
+        report "MicroBlaze signals sampling done";
+
         wait for 5*CLK_PERIOD;
+        microblaze_sampling_done <= '0'; -- short pulse, just a handshake
+        report "MicroBlaze done pulse cleared";
 
-        -- Wait for USB transfer to complete
-        wait for 50*CLK_PERIOD;
+        ---------------------------------------------------------------------
+        -- PHASE 4: CONTROL MODULE SHOULD RESPOND WITH CONTROL_DONE
+        ---------------------------------------------------------------------
+        wait until control_done = '1';
+        report "CONTROL_DONE detected - control process completed";
 
-        -- Finish simulation
+        ---------------------------------------------------------------------
+        -- PHASE 5: END OF SIMULATION
+        ---------------------------------------------------------------------
+        wait for 10*CLK_PERIOD;
+        report "Simulation finished successfully";
         wait;
     end process;
 
