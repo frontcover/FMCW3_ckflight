@@ -11,19 +11,20 @@ architecture sim of control_sim is
 
     -- DUT signals
     signal clk        : std_logic := '0';
-    signal reset      : std_logic := '1';
-    signal muxout     : std_logic := '0';
-    signal adc_data_a : std_logic_vector(15 downto 0) := (others => '0');
-    signal adc_data_b : std_logic_vector(15 downto 0) := (others => '0');
-    signal adc_valid  : std_logic := '0';
-    signal adc_oe     : std_logic_vector(1 downto 0);
-    signal adc_shdn   : std_logic_vector(1 downto 0);
-    signal pa_en      : std_logic;
-    signal config_done: std_logic := '0';
-    signal usb_chipselect : std_logic;
-    signal usb_write_n    : std_logic;
-    signal usb_writedata  : std_logic_vector(7 downto 0);
-    signal usb_tx_full    : std_logic := '0';
+    signal reset                    : std_logic := '1';
+    signal soft_reset               : std_logic := '1';
+    signal muxout                   : std_logic := '0';
+    signal adc_data_a               : std_logic_vector(15 downto 0) := (others => '0');
+    signal adc_data_b               : std_logic_vector(15 downto 0) := (others => '0');
+    signal adc_valid                : std_logic := '0';
+    signal adc_oe                   : std_logic_vector(1 downto 0);
+    signal adc_shdn                 : std_logic_vector(1 downto 0);
+    signal pa_en                    : std_logic;
+    signal config_done              : std_logic := '0';
+    signal usb_chipselect           : std_logic;
+    signal usb_write_n              : std_logic;
+    signal usb_writedata            : std_logic_vector(7 downto 0);
+    signal usb_tx_full              : std_logic := '0';
     signal microblaze_sampling_done : std_logic := '0';
     signal control_done : std_logic := '0';
 
