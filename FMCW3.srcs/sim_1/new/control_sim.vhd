@@ -96,6 +96,9 @@ begin
             wait for CLK_PERIOD;
         end loop;
 
+        adc_data_a <= std_logic_vector(to_unsigned(0, 16));
+        adc_data_b <= std_logic_vector(to_unsigned(0, 16));
+            
         adc_valid <= '0';
         muxout <= '0';
         report "Sampling phase complete, waiting for MicroBlaze command";
