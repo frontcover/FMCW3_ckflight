@@ -125,7 +125,7 @@ begin
                     -- Later config_done must be resetted since new radar recording can be started with new features.
                     
                     -- To reset these logics i need to send a signal to config module as well to indicate that control is done etc. so config can start listening python again
-                    if muxout = '1' and config_done = '1' and microblaze_sampling_done = '0' then
+                    if muxout = '1' and config_done = '1' and mb_done_latched = '0' then
                         state <= RAMP;
                         s_control_done <= '0';
                         s_usb_tx_done <= '0';
@@ -189,8 +189,8 @@ begin
                     elsif usb_idx >= sample_count then
                         -- usb transfer send all bytes before gap is finished so return to idle and wait ramp is correct way.
                         state <= IDLE;
-                        s_usb_tx_done <= '1';      -- <-- Latch USB transfer done here
-
+                        s_usb_tx_done <= '1';      -- <-- Latch USB transfer done here          
+                        usb_writedata <= (others => '0');
                     end if;
 
                 -- USB_TX_PULSE: pulse write_n low for 1 clock
