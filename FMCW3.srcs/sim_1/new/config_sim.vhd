@@ -11,6 +11,7 @@ architecture sim of config_sim is
 
     signal clk          : std_logic := '0';
     signal reset        : std_logic := '1';
+    signal soft_reset   : std_logic := '0';
     signal usb_rx_empty : std_logic := '1';  -- like RXF#: 1 = empty
     signal usb_readdata : std_logic_vector(7 downto 0) := (others => '0');
     signal chipselect   : std_logic;
@@ -34,6 +35,7 @@ architecture sim of config_sim is
         port (
             clk          : in  std_logic;
             reset        : in  std_logic;
+            soft_reset   : in  std_logic;
             usb_rx_empty : in  std_logic;
             usb_readdata : in  std_logic_vector(7 downto 0);
             chipselect   : out std_logic;
@@ -55,6 +57,7 @@ begin
         port map (
             clk          => clk,
             reset        => reset,
+            soft_reset   => soft_reset,
             usb_rx_empty => usb_rx_empty,
             usb_readdata => usb_readdata,
             chipselect   => chipselect,

@@ -16,6 +16,7 @@ architecture sim of config_sim2 is
     -- Signals for DUT
     signal clk          : std_logic := '0';
     signal reset        : std_logic := '1';
+    signal soft_reset   : std_logic := '0';
     signal usb_rx_empty : std_logic := '1';
     signal usb_readdata : std_logic_vector(7 downto 0) := (others => '0');
     signal chipselect   : std_logic;
@@ -41,6 +42,7 @@ begin
         port map (
             clk          => clk,
             reset        => reset,
+            soft_reset   => soft_reset,
             usb_rx_empty => usb_rx_empty,
             usb_readdata => usb_readdata,
             chipselect   => chipselect,
