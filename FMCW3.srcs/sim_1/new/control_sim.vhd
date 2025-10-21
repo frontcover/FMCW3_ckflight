@@ -111,7 +111,7 @@ begin
         report "MicroBlaze signals sampling done";
 
         wait for 5*CLK_PERIOD;
-        microblaze_sampling_done <= '0'; -- short pulse, just a handshake
+        --microblaze_sampling_done <= '0'; -- short pulse, just a handshake
         report "MicroBlaze done pulse cleared";
 
         ---------------------------------------------------------------------

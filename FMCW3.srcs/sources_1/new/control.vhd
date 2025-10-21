@@ -130,6 +130,7 @@ begin
                         s_control_done <= '0';
                         s_usb_tx_done <= '0';
                     
+                    -- microblaze_done signal will not be pulse. It will stay high so code will enter here
                     elsif mb_done_latched = '1' and s_usb_tx_done = '1' then --
                         state <= IDLE;
                         s_control_done <= '1';
