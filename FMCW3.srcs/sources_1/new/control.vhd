@@ -45,13 +45,11 @@ architecture Behavioral of control is
     signal sample_idx : integer range 0 to MAX_SAMPLES-1 := 0; -- Used during sampling to store data
     signal byte_sel   : integer range 0 to 3 := 0;    
     signal usb_idx    : integer range 0 to MAX_SAMPLES-1 := 0; -- used during usb transmission
-    
-    signal sample_count : integer range 0 to MAX_SAMPLES-1 := 0;
-    
-    signal adc_latched: std_logic_vector(31 downto 0);
         
+    signal sample_count : integer range 0 to MAX_SAMPLES-1 := 0;    
+    signal adc_latched: std_logic_vector(31 downto 0);        
+    
     signal s_usb_tx_done : std_logic := '0'; -- to prevent stopping and sending control done before sending last ramps all bytes.
-
 
 begin
 
@@ -63,12 +61,10 @@ begin
                 adc_latched <= adc_data_a & adc_data_b;
             end if;
         end if;
-    end process;
-   
+    end process;   
 
     -- FSM sequential
-    process(clk, reset, soft_reset)
-    
+    process(clk, reset, soft_reset)    
     begin
     
         if reset = '1' or soft_reset = '1' then
@@ -108,10 +104,12 @@ begin
                         s_usb_tx_done <= '0';
                     
                     -- microblaze_done signal will not be pulse. It will stay high so code will enter here
-                    elsif microblaze_sampling_done = '1' and s_usb_tx_done = '1' then --
+                    elsif microblaze_sampling_done = '1' and s_usb_tx_done = '1' then
+                        
                         state <= IDLE;
+                    
                     end if;
-
+                
                 when RAMP =>
                 
                     adc_oe          <= "00";
@@ -119,7 +117,7 @@ begin
                     pa_en           <= '1';
                     usb_chipselect  <= '0';
                     usb_write_n     <= '1';
-
+                
                     if adc_valid = '1' and sample_idx < MAX_SAMPLES then
                         mem(sample_idx) <= adc_latched;
                         sample_idx      <= sample_idx + 1;
@@ -164,10 +162,12 @@ begin
                         state <= USB_TX_PULSE;
                     
                     elsif usb_idx >= sample_count then
+                    
                         -- usb transfer send all bytes before gap is finished so return to idle and wait ramp is correct way.
                         state <= IDLE;
                         s_usb_tx_done <= '1';      -- <-- Latch USB transfer done here          
                         usb_writedata <= (others => '0');
+                    
                     end if;
 
                 -- USB_TX_PULSE: pulse write_n low for 1 clock
