@@ -35,6 +35,7 @@ begin
     begin
         
         -- if reset or control modules sampling is done then config can start listening to python again
+        -- control done means; whole sampling for N seconds is done. User selects amount of second to run radar.
         if reset = '1' or control_done = '1' then
             st           <= st_idle;
             byte_counter <= 0;
