@@ -2,7 +2,6 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.NUMERIC_STD.ALL;
 
-
 entity top_module is        
     
     generic (
@@ -128,13 +127,13 @@ architecture Behavioral of top_module is
         port (
             clk             : in  std_logic;
             reset           : in  std_logic;
+            soft_reset      : in  std_logic;
             usb_rx_empty    : in  std_logic;
             usb_readdata    : in  std_logic_vector(7 downto 0);
             chipselect      : out std_logic;
             read_n          : out std_logic;
             config_done     : out std_logic;
-            data_out        : out std_logic_vector(PACKET_SIZE*8-1 downto 0);
-            control_done    : in std_logic -- will be used to reset config logic so it can restart listening to python
+            data_out        : out std_logic_vector(PACKET_SIZE*8-1 downto 0)
         );
     end component;
     
@@ -145,6 +144,7 @@ architecture Behavioral of top_module is
     port (
         clk                         : in  std_logic; -- system clock
         reset                       : in  std_logic; -- active high reset
+        soft_reset                  : in  std_logic;
         muxout                      : in  std_logic; -- high during ramp
 
         -- ADC inputs
@@ -164,8 +164,7 @@ architecture Behavioral of top_module is
         usb_writedata               : out std_logic_vector(7 downto 0);
         usb_tx_full                 : in  std_logic;
         
-        microblaze_sampling_done    : in std_logic; -- microblaze will calculate total sampling time and tell control module to stop sampling
-        control_done                : out std_logic -- control sends done to other modules (config for now) so it can talk to python again for new run
+        microblaze_sampling_done    : in std_logic -- microblaze will calculate total sampling time and tell control module to stop sampling
 
     );  
     end component;
@@ -209,8 +208,11 @@ architecture Behavioral of top_module is
     signal s_control_usb_write_n     : std_logic;
     signal s_control_usb_chipselect  : std_logic;
     signal s_control_usb_writedata   : std_logic_vector(7 downto 0);
-    signal s_control_microblaze_done : std_logic;
     signal s_control_done            : std_logic;
+
+    signal s_microblaze_done         : std_logic;
+    signal s_soft_reset              : std_logic;
+
     
     -- ILA Probe signals
     signal s_probe0 : std_logic_vector(7 DOWNTO 0);
@@ -254,7 +256,8 @@ begin
         
     ADF_CE                      <= s_gpio_rtl_0_tri_o(0); -- microblaze 16 bit gpio's bit 0 is controlling this. It will be written 1 to power device
     ADF_LE                      <= s_gpio_rtl_0_tri_o(1); -- microblaze 16 bit gpio's bit 1 is spi_cs of adf4158
-    s_control_microblaze_done   <= s_gpio_rtl_0_tri_o(2); -- microblaze 16 bit gpio's bit 2 is microblaze's done signal to finish sampling
+    s_microblaze_done           <= s_gpio_rtl_0_tri_o(2); -- microblaze 16 bit gpio's bit 2 is microblaze's done signal to finish sampling
+    s_soft_reset                <= s_gpio_rtl_0_tri_o(3); -- microblaze 16 bit gpio's bit 3 is software reset to reset everything instead of handshake singals between modules.
     
     
     -- connect chipselect according to if config is done or not.
@@ -336,13 +339,13 @@ begin
     port map (
         clk          => SYSCLK,
         reset        => RESET,        -- top-level reset signal
+        soft_reset   => s_soft_reset,
         usb_rx_empty => s_rx_empty,
         usb_readdata => s_config_usb_readdata,
         chipselect   => s_config_usb_chipselect,
         read_n       => s_config_usb_read_n,
         config_done  => s_config_done,
-        data_out     => s_config_data,
-        control_done => s_control_done
+        data_out     => s_config_data
     );
     
     -- Control FSM instantiation    
@@ -353,6 +356,7 @@ begin
     port map (
         clk                         => SYSCLK,
         reset                       => RESET,
+        soft_reset                  => s_soft_reset,
         muxout                      => muxout_sync,     -- ADF4158 MUXOUT input high pulse during ramp
         
         adc_data_a                  => s_adc_a_out,
@@ -369,8 +373,7 @@ begin
         usb_writedata               => s_control_usb_writedata,
         usb_tx_full                 => s_tx_full,
         
-        microblaze_sampling_done    => s_control_microblaze_done,
-        control_done                => s_control_done   -- output from control module to config to start listening new python commands
+        microblaze_sampling_done    => s_microblaze_done
     );
 
     ila_0_i : ila_0

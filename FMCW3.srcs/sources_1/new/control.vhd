@@ -9,6 +9,7 @@ entity control is
     Port (
         clk                         : in  std_logic;
         reset                       : in  std_logic;
+        soft_reset                  : in  std_logic;
         muxout                      : in  std_logic;
 
         -- ADC inputs
@@ -28,9 +29,7 @@ entity control is
         usb_writedata               : out std_logic_vector(7 downto 0);
         usb_tx_full                 : in  std_logic;
         
-        microblaze_sampling_done    : in std_logic;
-        control_done                : out std_logic
-
+        microblaze_sampling_done    : in std_logic
     );
 end control;
 
@@ -50,16 +49,11 @@ architecture Behavioral of control is
     signal sample_count : integer range 0 to MAX_SAMPLES-1 := 0;
     
     signal adc_latched: std_logic_vector(31 downto 0);
-    
-    signal s_control_done : std_logic := '0';
-    
+        
     signal s_usb_tx_done : std_logic := '0'; -- to prevent stopping and sending control done before sending last ramps all bytes.
-    signal mb_done_latched : std_logic := '0'; -- if microblaze signal is a short 0 1 0 pulse then this code cannot see it so i register it.
 
 
 begin
-
-    control_done <= s_control_done;
 
     -- Latch ADC data when valid
     process(clk)
@@ -70,28 +64,14 @@ begin
             end if;
         end if;
     end process;
-
-    -- Latch MicroBlaze short pulse
-    process(clk, reset)
-    begin
-        if reset = '1' then
-            mb_done_latched <= '0';
-        elsif rising_edge(clk) then
-            if microblaze_sampling_done = '1' then
-                mb_done_latched <= '1';
-            elsif s_control_done = '1' then
-                mb_done_latched <= '0';
-            end if;
-        end if;
-    end process;
-    
+   
 
     -- FSM sequential
-    process(clk, reset)
+    process(clk, reset, soft_reset)
     
     begin
     
-        if reset = '1' then
+        if reset = '1' or soft_reset = '1' then
             state           <= IDLE;
             sample_idx      <= 0;
             sample_count    <= 0;
@@ -103,7 +83,6 @@ begin
             usb_chipselect  <= '0';
             usb_write_n     <= '1';
             usb_writedata   <= (others => '0');
-            s_control_done  <= '0';
 
         elsif rising_edge(clk) then
             
@@ -124,16 +103,13 @@ begin
                     -- the control logic stays in IDLE state.
                     -- Later config_done must be resetted since new radar recording can be started with new features.
                     
-                    -- To reset these logics i need to send a signal to config module as well to indicate that control is done etc. so config can start listening python again
-                    if muxout = '1' and config_done = '1' and mb_done_latched = '0' then
+                    if muxout = '1' and config_done = '1' and microblaze_sampling_done = '0' then
                         state <= RAMP;
-                        s_control_done <= '0';
                         s_usb_tx_done <= '0';
                     
                     -- microblaze_done signal will not be pulse. It will stay high so code will enter here
-                    elsif mb_done_latched = '1' and s_usb_tx_done = '1' then --
+                    elsif microblaze_sampling_done = '1' and s_usb_tx_done = '1' then --
                         state <= IDLE;
-                        s_control_done <= '1';
                     end if;
 
                 when RAMP =>

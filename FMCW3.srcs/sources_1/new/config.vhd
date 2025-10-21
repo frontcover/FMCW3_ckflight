@@ -8,7 +8,8 @@ entity config is
     );
     port (
         clk          : in  std_logic;
-        reset        : in  std_logic;        
+        reset        : in  std_logic;   
+        soft_reset   : in  std_logic;     
         usb_rx_empty : in  std_logic;
         usb_readdata : in  std_logic_vector(7 downto 0);
         chipselect   : out std_logic;
@@ -29,14 +30,14 @@ architecture Behavioral of config is
     signal byte_counter : integer range 0 to PACKET_SIZE := 0;
     signal tmp_data     : std_logic_vector(PACKET_SIZE*8-1 downto 0) := (others => '0');
 
+
 begin
 
-    process(clk, reset)
+    process(clk, reset, soft_reset)
     begin
         
-        -- if reset or control modules sampling is done then config can start listening to python again
-        -- control done means; whole sampling for N seconds is done. User selects amount of second to run radar.
-        if reset = '1' or control_done = '1' then
+        -- Instead of handshaking microlbaze issues a soft reset to reset config and control so it starts again for new radar op
+        if reset = '1' or soft_reset = '1' then
             st           <= st_idle;
             byte_counter <= 0;
             tmp_data     <= (others => '0');
