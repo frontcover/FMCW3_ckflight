@@ -95,17 +95,13 @@ begin
                     usb_idx         <= 0;
                     byte_sel        <= 0;
                     
-                    -- When microblaze sends high to indicate that N seconds of sampling radar is done
-                    -- the control logic stays in IDLE state.
-                    -- Later config_done must be resetted since new radar recording can be started with new features.
-                    
+                    -- When microblaze sends high to indicate N seconds of radar op is done, the control logic stays in IDLE state.                    
                     if muxout = '1' and config_done = '1' and microblaze_sampling_done = '0' then
                         state <= RAMP;
                         s_usb_tx_done <= '0';
                     
                     -- microblaze_done signal will not be pulse. It will stay high so code will enter here
-                    elsif microblaze_sampling_done = '1' and s_usb_tx_done = '1' then
-                        
+                    elsif microblaze_sampling_done = '1' and s_usb_tx_done = '1' then                        
                         state <= IDLE;
                     
                     end if;
