@@ -164,7 +164,8 @@ architecture Behavioral of top_module is
         usb_writedata               : out std_logic_vector(7 downto 0);
         usb_tx_full                 : in  std_logic;
         
-        microblaze_sampling_done    : in std_logic -- microblaze will calculate total sampling time and tell control module to stop sampling
+        microblaze_sampling_done    : in std_logic; -- microblaze will calculate total sampling time and tell control module to stop sampling
+        ramp_done                   : out std_logic -- debugging signal
 
     );  
     end component;
@@ -211,6 +212,7 @@ architecture Behavioral of top_module is
 
     signal s_microblaze_done         : std_logic := '0';
     signal s_soft_reset              : std_logic := '1';
+    signal s_ramp_done               : std_logic := '0';
 
     
     -- ILA Probe signals
@@ -372,7 +374,8 @@ begin
         usb_writedata               => s_control_usb_writedata,
         usb_tx_full                 => s_tx_full,
         
-        microblaze_sampling_done    => s_microblaze_done
+        microblaze_sampling_done    => s_microblaze_done,
+        ramp_done                   => s_ramp_done
     );
 
     ila_0_i : ila_0
