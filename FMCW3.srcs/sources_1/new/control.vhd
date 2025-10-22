@@ -8,7 +8,7 @@ entity control is
     );
     Port (
         clk                         : in  std_logic;
-        reset                       : in  std_logic;
+        reset                       : in  std_logic; -- active low
         soft_reset                  : in  std_logic;
         muxout                      : in  std_logic;
 
@@ -67,7 +67,7 @@ begin
     process(clk, reset, soft_reset)    
     begin
     
-        if reset = '1' or soft_reset = '1' then
+        if reset = '0' or soft_reset = '0' then
             state           <= IDLE;
             sample_idx      <= 0;
             sample_count    <= 0;

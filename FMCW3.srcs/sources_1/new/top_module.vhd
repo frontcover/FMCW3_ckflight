@@ -100,7 +100,7 @@ architecture Behavioral of top_module is
     port (
         -- Bus signals
         clk         : in std_logic;
-        reset       : in std_logic;
+        reset       : in std_logic; -- active low
         read_n      : in std_logic;
         write_n     : in std_logic;
         chipselect  : in std_logic;
@@ -126,8 +126,8 @@ architecture Behavioral of top_module is
         );
         port (
             clk             : in  std_logic;
-            reset           : in  std_logic;
-            soft_reset      : in  std_logic;
+            reset           : in  std_logic; -- active low reset
+            soft_reset      : in  std_logic; -- active low software reset by microblaze to reset modules for next radar op
             usb_rx_empty    : in  std_logic;
             usb_readdata    : in  std_logic_vector(7 downto 0);
             chipselect      : out std_logic;
@@ -143,8 +143,8 @@ architecture Behavioral of top_module is
     );
     port (
         clk                         : in  std_logic; -- system clock
-        reset                       : in  std_logic; -- active high reset
-        soft_reset                  : in  std_logic;
+        reset                       : in  std_logic; -- active low reset
+        soft_reset                  : in  std_logic; -- active low software reset by microblaze to reset modules for next radar op
         muxout                      : in  std_logic; -- high during ramp
 
         -- ADC inputs
