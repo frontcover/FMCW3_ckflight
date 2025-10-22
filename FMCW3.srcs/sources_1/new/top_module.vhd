@@ -213,6 +213,7 @@ architecture Behavioral of top_module is
     signal s_microblaze_done         : std_logic := '0';
     signal s_soft_reset              : std_logic := '1';
     signal s_ramp_done               : std_logic := '0';
+    signal s_ramp_configured         : std_logic := '0';
 
     
     -- ILA Probe signals
@@ -258,7 +259,9 @@ begin
     ADF_CE                      <= s_gpio_rtl_0_tri_o(0); -- microblaze 16 bit gpio's bit 0 is controlling this. It will be written 1 to power device
     ADF_LE                      <= s_gpio_rtl_0_tri_o(1); -- microblaze 16 bit gpio's bit 1 is spi_cs of adf4158
     s_microblaze_done           <= s_gpio_rtl_0_tri_o(2); -- microblaze 16 bit gpio's bit 2 is microblaze's done signal to finish sampling
-    s_soft_reset                <= s_gpio_rtl_0_tri_o(3); -- microblaze 16 bit gpio's bit 3 is software reset to reset everything instead of handshake singals between modules.
+    -- This ramp configured is not necessary for now but i have added anyways
+    s_ramp_configured           <= s_gpio_rtl_0_tri_o(3); -- microblaze 16 bit gpio's bit 3 is ramp configured signal
+    s_soft_reset                <= s_gpio_rtl_0_tri_o(4); -- microblaze 16 bit gpio's bit 4 is software reset to reset everything instead of handshake singals between modules.
     
     
     -- connect chipselect according to if config is done or not.
