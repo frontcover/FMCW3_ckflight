@@ -180,48 +180,47 @@ architecture Behavioral of top_module is
     end component;
     
     -- Microblaze signals
-    signal s_gpio_rtl_0_tri_o : STD_LOGIC_VECTOR ( 15 downto 0 );
-    signal s_uart_rtl_0_rxd   : STD_LOGIC;
-    signal s_uart_rtl_0_txd   : STD_LOGIC;
+    signal s_gpio_rtl_0_tri_o : STD_LOGIC_VECTOR ( 15 downto 0 ) := (others => '0');
+    signal s_uart_rtl_0_rxd   : STD_LOGIC := '1';
+    signal s_uart_rtl_0_txd   : STD_LOGIC := '1';
     
     signal s_spi0_miso          : STD_LOGIC := 'Z';  -- ADF4158 does not have spi miso line so microblaze is connected to this internal signal
-    signal s_spi0_cs            : STD_LOGIC;        -- LE pin will be controlled with gpio so this spi's cs will only be connected to internal signal for now
+    signal s_spi0_cs            : STD_LOGIC := '1';  -- LE pin will be controlled with gpio so this spi's cs will only be connected to internal signal for now
         
     -- ADC signals
-    signal s_adc_a_out  : std_logic_vector(15 downto 0);         -- channel A data
-    signal s_adc_b_out  : std_logic_vector(15 downto 0);         -- channel B data
-    signal s_adc_valid  : std_logic;        -- FIR output valid pulse
+    signal s_adc_a_out  : std_logic_vector(15 downto 0) := (others => '0');         -- channel A data
+    signal s_adc_b_out  : std_logic_vector(15 downto 0) := (others => '0');         -- channel B data
+    signal s_adc_valid  : std_logic := '0';        -- FIR output valid pulse
 
     -- USB_SYNC signals
-    signal s_chipselect  : std_logic;
-    signal s_tx_full     : std_logic;
-    signal s_rx_empty    : std_logic;
+    signal s_chipselect  : std_logic := '0';
+    signal s_tx_full     : std_logic := '0';
+    signal s_rx_empty    : std_logic := '1';
         
     -- CONFIG signals
-    signal s_config_done            : std_logic;   
-    signal s_config_data            : std_logic_vector(CONFIG_PACKET_SIZE*8-1 downto 0);
-    signal s_config_usb_readdata    : std_logic_vector(7 downto 0);
-    signal s_config_usb_chipselect  : std_logic;
-    signal s_config_usb_read_n      : std_logic;
+    signal s_config_done            : std_logic := '0';   
+    signal s_config_data            : std_logic_vector(CONFIG_PACKET_SIZE*8-1 downto 0) := (others => '0');
+    signal s_config_usb_readdata    : std_logic_vector(7 downto 0) := (others => '0');
+    signal s_config_usb_chipselect  : std_logic := '0';
+    signal s_config_usb_read_n      : std_logic := '1';
 
     -- Signals for control
-    signal s_control_usb_write_n     : std_logic;
-    signal s_control_usb_chipselect  : std_logic;
-    signal s_control_usb_writedata   : std_logic_vector(7 downto 0);
-    signal s_control_done            : std_logic;
+    signal s_control_usb_write_n     : std_logic := '1';
+    signal s_control_usb_chipselect  : std_logic := '0';
+    signal s_control_usb_writedata   : std_logic_vector(7 downto 0) := (others => '0');
 
-    signal s_microblaze_done         : std_logic;
-    signal s_soft_reset              : std_logic;
+    signal s_microblaze_done         : std_logic := '0';
+    signal s_soft_reset              : std_logic := '1';
 
     
     -- ILA Probe signals
-    signal s_probe0 : std_logic_vector(7 DOWNTO 0);
-    signal s_probe1 : std_logic_vector(11 DOWNTO 0);
-    signal s_probe2 : std_logic_vector(31 DOWNTO 0);
-    signal s_probe3 : std_logic_vector(9 DOWNTO 0);
+    signal s_probe0 : std_logic_vector(7 DOWNTO 0) := (others => '0');
+    signal s_probe1 : std_logic_vector(11 DOWNTO 0)  := (others => '0');
+    signal s_probe2 : std_logic_vector(31 DOWNTO 0) := (others => '0');
+    signal s_probe3 : std_logic_vector(9 DOWNTO 0) := (others => '0');
     
-    signal muxout_sync : std_logic;
-    signal muxout_sync_d : std_logic;
+    signal muxout_sync : std_logic := '0';
+    signal muxout_sync_d : std_logic := '0';
     
 begin 
 
