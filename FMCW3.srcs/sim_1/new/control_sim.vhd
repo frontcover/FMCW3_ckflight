@@ -98,8 +98,13 @@ begin
         
         report "Soft reset triggered";
         soft_reset <= '0';
+        config_done <= '0';
         wait for 100 * CLK_PERIOD;
         soft_reset <= '1';
+        
+
+        wait for 100 * CLK_PERIOD;
+        config_done <= '1';
         
         -- I have tested both clearing microblaze done before or after software reset
         --wait for 1000 * CLK_PERIOD;

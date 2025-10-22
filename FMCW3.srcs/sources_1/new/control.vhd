@@ -99,7 +99,6 @@ begin
                     byte_sel        <= 0;
                     
                     -- When microblaze sends high to indicate N seconds of radar op is done, the control logic stays in IDLE state.                    
-
                     if muxout = '1' and config_done = '1' and microblaze_sampling_done = '0' then
                         state <= RAMP;
                         s_usb_tx_done <= '0';
