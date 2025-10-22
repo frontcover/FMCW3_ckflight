@@ -29,13 +29,14 @@ entity control is
         usb_writedata               : out std_logic_vector(7 downto 0);
         usb_tx_full                 : in  std_logic;
         
-        microblaze_sampling_done    : in std_logic
+        microblaze_sampling_done    : in std_logic;
+        ramp_done                   : out std_logic -- for debugging on sim
     );
 end control;
 
 architecture Behavioral of control is
 
-    type state_type is (IDLE, RAMP, GAP_WAIT, USB_TX_IDLE, USB_TX_PULSE);
+    type state_type is (IDLE, RAMP, GAP_WAIT, USB_TX_IDLE, USB_TX_PULSE, WAIT_SOFT_RESET);
     signal state : state_type;
 
     -- Internal memory for ramp samples (16-bit A + 16-bit B)
@@ -79,6 +80,8 @@ begin
             usb_chipselect  <= '0';
             usb_write_n     <= '1';
             usb_writedata   <= (others => '0');
+            ramp_done       <= '0';
+            s_usb_tx_done   <= '0';
 
         elsif rising_edge(clk) then
             
@@ -96,14 +99,17 @@ begin
                     byte_sel        <= 0;
                     
                     -- When microblaze sends high to indicate N seconds of radar op is done, the control logic stays in IDLE state.                    
+
                     if muxout = '1' and config_done = '1' and microblaze_sampling_done = '0' then
                         state <= RAMP;
                         s_usb_tx_done <= '0';
+                        ramp_done     <= '0';
                     
-                    -- microblaze_done signal will not be pulse. It will stay high so code will enter here
+                    -- microblaze_done signal will not be a pulse.
                     elsif microblaze_sampling_done = '1' and s_usb_tx_done = '1' then                        
-                        state <= IDLE;
-                    
+                        state <= WAIT_SOFT_RESET;
+                        ramp_done <= '1';
+                                       
                     end if;
                 
                 when RAMP =>
@@ -159,7 +165,7 @@ begin
                     
                     elsif usb_idx >= sample_count then
                     
-                        -- usb transfer send all bytes before gap is finished so return to idle and wait ramp is correct way.
+                        -- usb transfer send all bytes before gap is finished so return to WAIT_SOFT_RESET and wait mb to reset modules.
                         state <= IDLE;
                         s_usb_tx_done <= '1';      -- <-- Latch USB transfer done here          
                         usb_writedata <= (others => '0');
@@ -180,6 +186,17 @@ begin
                     end if;
 
                     state <= USB_TX_IDLE;
+
+                when WAIT_SOFT_RESET =>
+                     -- Just park here until soft_reset happens which resets everything
+                    adc_oe          <= "11";
+                    adc_shdn        <= "11";
+                    pa_en           <= '0';
+                    usb_chipselect  <= '0';
+                    usb_write_n     <= '1';
+                    usb_writedata   <= (others => '0');
+                    ramp_done       <= '1';
+                    -- No IF conditions needed here                    
 
                 when others =>
                     state <= IDLE;

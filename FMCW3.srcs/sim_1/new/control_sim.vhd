@@ -9,10 +9,9 @@ architecture sim of control_sim is
 
     constant CLK_PERIOD : time := 10 ns;
 
-    -- DUT signals
     signal clk                      : std_logic := '0';
     signal reset                    : std_logic := '1';
-    signal soft_reset               : std_logic := '0';
+    signal soft_reset               : std_logic := '1';
     signal muxout                   : std_logic := '0';
     signal adc_data_a               : std_logic_vector(15 downto 0) := (others => '0');
     signal adc_data_b               : std_logic_vector(15 downto 0) := (others => '0');
@@ -26,12 +25,10 @@ architecture sim of control_sim is
     signal usb_writedata            : std_logic_vector(7 downto 0);
     signal usb_tx_full              : std_logic := '0';
     signal microblaze_sampling_done : std_logic := '0';
+    signal ramp_done                : std_logic := '0';
 
 begin
 
-    -------------------------------------------------------------------------
-    -- DUT INSTANTIATION
-    -------------------------------------------------------------------------
     DUT: entity work.control
         port map (
             clk                      => clk,
@@ -49,86 +46,78 @@ begin
             usb_write_n              => usb_write_n,
             usb_writedata            => usb_writedata,
             usb_tx_full              => usb_tx_full,
-            microblaze_sampling_done => microblaze_sampling_done
+            microblaze_sampling_done => microblaze_sampling_done,
+            ramp_done                => ramp_done
         );
 
-    -------------------------------------------------------------------------
-    -- CLOCK GENERATION
-    -------------------------------------------------------------------------
     clk_process: process
     begin
         while true loop
             clk <= '0';
-            wait for CLK_PERIOD/2;
+            wait for CLK_PERIOD / 2;
             clk <= '1';
-            wait for CLK_PERIOD/2;
+            wait for CLK_PERIOD / 2;
         end loop;
     end process;
 
-    -------------------------------------------------------------------------
-    -- STIMULUS PROCESS
-    -------------------------------------------------------------------------
     stimulus: process
+        procedure simulate_ramp(ramp_id : integer) is
+        begin
+            muxout <= '1';
+            report "RAMP " & integer'image(ramp_id) & " STARTED";
+            for i in 0 to 15 loop
+                adc_data_a <= std_logic_vector(to_unsigned(i*10, 16));
+                adc_data_b <= std_logic_vector(to_unsigned(i*20, 16));
+                adc_valid  <= '1';
+                wait for CLK_PERIOD;
+            end loop;
+            adc_valid <= '0';
+            muxout <= '0';
+            report "RAMP " & integer'image(ramp_id) & " ENDED";
+            wait for 180 * CLK_PERIOD;
+        end procedure;
     begin
-        ---------------------------------------------------------------------
-        -- PHASE 1: RESET AND INITIALIZATION
-        ---------------------------------------------------------------------
         report "Simulation started - resetting DUT";
-        reset <= '1';
-        wait for 3*CLK_PERIOD;
         reset <= '0';
-        report "Reset released";
-
-        wait for 5*CLK_PERIOD;
+        wait for 3 * CLK_PERIOD;
+        reset <= '1';
+        wait for 5 * CLK_PERIOD;
         config_done <= '1';
-        report "Configuration done asserted (ready for sampling)";
+        report "Reset released, config_done set";
 
-        ---------------------------------------------------------------------
-        -- PHASE 2: START SAMPLING (MUXOUT HIGH)
-        ---------------------------------------------------------------------
-        muxout <= '1';
-        report "MUXOUT HIGH -> Sampling begins";
+        wait for 10 * CLK_PERIOD;
 
-        for i in 0 to 15 loop
-            adc_data_a <= std_logic_vector(to_unsigned(i*10, 16));
-            adc_data_b <= std_logic_vector(to_unsigned(i*20, 16));
-            adc_valid  <= '1';
-            wait for CLK_PERIOD;
+        for n in 1 to 5 loop
+            simulate_ramp(n);
         end loop;
 
-        adc_valid <= '0';
-        muxout <= '0';
-        report "MUXOUT LOW -> Sampling stopped, gap started";
-
-        ---------------------------------------------------------------------
-        -- PHASE 3: ALLOW USB TRANSMISSION
-        ---------------------------------------------------------------------
-        wait for 50*CLK_PERIOD; -- enough time for USB_TX loop to complete
-        report "Expect USB_TX states active (data being sent to PC)";
-
-        ---------------------------------------------------------------------
-        -- PHASE 4: MICRO-BLAZE ENDS OPERATION
-        ---------------------------------------------------------------------
+        report "MicroBlaze signals DONE after 5 ramps";
         microblaze_sampling_done <= '1';
-        report "MicroBlaze indicates sampling done (no new ramps)";
-
-        -- Wait enough time for USB_TX to complete before resetting
-        wait for 100*CLK_PERIOD;
-        report "USB_TX likely completed - issuing soft reset";
-
-        ---------------------------------------------------------------------
-        -- PHASE 5: SOFT RESET TO RESTART SYSTEM
-        ---------------------------------------------------------------------
-        soft_reset <= '1';
-        wait for 3*CLK_PERIOD;
+        wait for 100 * CLK_PERIOD;
+        microblaze_sampling_done <= '0';
+        
+        report "Soft reset triggered";
         soft_reset <= '0';
-        report "Soft reset pulse applied, system ready for next operation";
+        wait for 100 * CLK_PERIOD;
+        soft_reset <= '1';
+        
+        -- I have tested both clearing microblaze done before or after software reset
+        --wait for 1000 * CLK_PERIOD;
+        --microblaze_sampling_done <= '0';
+        
+        report "Soft reset released, FSM restarted";
 
-        ---------------------------------------------------------------------
-        -- PHASE 6: END OF SIMULATION
-        ---------------------------------------------------------------------
-        wait for 50*CLK_PERIOD;
-        report "Simulation finished successfully!";
+        wait for 50 * CLK_PERIOD;
+
+        for n in 6 to 10 loop
+            simulate_ramp(n);
+        end loop;
+
+        report "MicroBlaze signals DONE after 10 total ramps";
+        microblaze_sampling_done <= '1';
+
+        wait for 100 * CLK_PERIOD;
+        report "Simulation finished successfully";
         wait;
     end process;
 
