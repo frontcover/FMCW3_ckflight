@@ -195,8 +195,11 @@ begin
                     usb_write_n     <= '1';
                     usb_writedata   <= (others => '0');
                     ramp_done       <= '1';
-                    -- No IF conditions needed here                    
-
+                    
+                    state <= WAIT_SOFT_RESET; -- soft reset clears for new radar op
+                    -- No IF conditions needed here             
+                           
+                    
                 when others =>
                     state <= IDLE;
 
