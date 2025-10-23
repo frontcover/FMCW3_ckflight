@@ -15,8 +15,7 @@ entity config is
         chipselect   : out std_logic;
         read_n       : out std_logic;
         config_done  : out std_logic;
-        data_out     : out std_logic_vector(PACKET_SIZE*8-1 downto 0);
-        control_done : in std_logic     -- will be used to reset config logic so it can restart listening python
+        data_out     : out std_logic_vector(PACKET_SIZE*8-1 downto 0)
     );
 end config;
 

@@ -16,14 +16,13 @@ architecture sim of config_sim2 is
     -- Signals for DUT
     signal clk          : std_logic := '0';
     signal reset        : std_logic := '1';
-    signal soft_reset   : std_logic := '0';
+    signal soft_reset   : std_logic := '1';
     signal usb_rx_empty : std_logic := '1';
     signal usb_readdata : std_logic_vector(7 downto 0) := (others => '0');
     signal chipselect   : std_logic;
     signal read_n       : std_logic;
     signal config_done  : std_logic;
     signal data_out     : std_logic_vector(PACKET_SIZE*8-1 downto 0);
-    signal control_done : std_logic := '0';
 
     -- Local FTDI simulation array
     type byte_array is array(0 to PACKET_SIZE-1) of std_logic_vector(7 downto 0);
@@ -48,8 +47,7 @@ begin
             chipselect   => chipselect,
             read_n       => read_n,
             config_done  => config_done,
-            data_out     => data_out,
-            control_done => control_done
+            data_out     => data_out
         );
 
     ----------------------------------------------------------------
@@ -74,6 +72,7 @@ begin
         wait for 50 ns;
         reset <= '0';
         wait for 50 ns;
+        reset <= '1';
 
         -- Fill FTDI buffer with sequential data
         for i in 0 to PACKET_SIZE-1 loop
