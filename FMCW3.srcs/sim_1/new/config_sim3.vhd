@@ -62,7 +62,7 @@ begin
     ----------------------------------------------------------------
     stimulus: process
 
-        procedure simulate_python_transfer(transfer_id : integer) is
+        procedure simulate_python_transfer is
             variable data_index : integer := 0;
         begin
             
@@ -73,13 +73,13 @@ begin
             end loop;
 
             -- Simulate intermittent USB data bursts
-            usb_rx_empty <= '0';
+            usb_rx_empty <= '0'; -- not empty there is data 
             for i in 0 to PACKET_SIZE-1 loop
                 wait until read_n = '0';      -- wait until DUT actually requests data
                 usb_readdata <= ftdi_data(i); -- provide next byte
                 wait until read_n = '1';      -- wait until read completes before next
             end loop;
-            usb_rx_empty <= '1';
+            usb_rx_empty <= '1'; -- empty
 
             wait for 100 ns;
             
@@ -100,7 +100,7 @@ begin
         ----------------------------------------------------------------
         -- FIRST CONFIG TRANSFER
         ----------------------------------------------------------------
-        simulate_python_transfer(1);
+        simulate_python_transfer;
         wait for 100 ns;
 
         ----------------------------------------------------------------
@@ -113,7 +113,7 @@ begin
         report "Soft reset released";
 
         wait for 100 ns;
-        simulate_python_transfer(2);
+        simulate_python_transfer;
         wait for 100 ns;
 
         ----------------------------------------------------------------
@@ -126,8 +126,16 @@ begin
         report "Soft reset released again";
 
         wait for 100 ns;
-        simulate_python_transfer(3);
+        simulate_python_transfer;
+        wait for 100 ns;
+        
+        reset <= '0';
+        wait for 50 ns;
+        reset <= '1';
+        wait for 50 ns;
 
+        simulate_python_transfer;
+    
         ----------------------------------------------------------------
         -- END OF TEST
         ----------------------------------------------------------------
