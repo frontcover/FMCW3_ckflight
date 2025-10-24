@@ -8,8 +8,8 @@ entity control is
     );
     Port (
         clk                         : in  std_logic;
-        reset                       : in  std_logic; -- active low
-        soft_reset                  : in  std_logic;
+        reset_n                     : in  std_logic; -- active low
+        soft_reset_n                : in  std_logic;
         muxout                      : in  std_logic;
 
         -- ADC inputs
@@ -29,6 +29,7 @@ entity control is
         usb_writedata               : out std_logic_vector(7 downto 0);
         usb_tx_full                 : in  std_logic;
         
+        microblaze_ramp_configured  : in std_logic;
         microblaze_sampling_done    : in std_logic;
         ramp_done                   : out std_logic -- for debugging on sim
     );
@@ -65,10 +66,10 @@ begin
     end process;   
 
     -- FSM sequential
-    process(clk, reset, soft_reset)    
+    process(clk, reset_n, soft_reset_n)    
     begin
     
-        if reset = '0' or soft_reset = '0' then
+        if reset_n = '0' or soft_reset_n = '0' then
             state           <= IDLE;
             sample_idx      <= 0;
             sample_count    <= 0;
@@ -99,7 +100,7 @@ begin
                     byte_sel        <= 0;
                     
                     -- When microblaze sends high to indicate N seconds of radar op is done, the control logic stays in IDLE state.                    
-                    if muxout = '1' and config_done = '1' and microblaze_sampling_done = '0' then
+                    if microblaze_ramp_configured = '1' and config_done = '1' and muxout = '1' and microblaze_sampling_done = '0' then
                         state <= RAMP;
                         s_usb_tx_done <= '0';
                         ramp_done     <= '0';

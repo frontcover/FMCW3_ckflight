@@ -8,8 +8,8 @@ entity config is
     );
     port (
         clk          : in  std_logic;
-        reset        : in  std_logic; -- active low
-        soft_reset   : in  std_logic;     
+        reset_n      : in  std_logic; -- active low
+        soft_reset_n : in  std_logic;     
         usb_rx_empty : in  std_logic;
         usb_readdata : in  std_logic_vector(7 downto 0);
         chipselect   : out std_logic;
@@ -32,11 +32,11 @@ architecture Behavioral of config is
 
 begin
 
-    process(clk, reset, soft_reset)
+    process(clk, reset_n, soft_reset_n)
     begin
         
         -- Instead of handshaking microlbaze issues a soft reset to reset config and control so it starts again for new radar op
-        if reset = '0' or soft_reset = '0' then
+        if reset_n = '0' or soft_reset_n = '0' then
             st           <= st_idle;
             byte_counter <= 0;
             tmp_data     <= (others => '0');
