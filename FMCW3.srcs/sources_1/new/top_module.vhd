@@ -11,47 +11,47 @@ entity top_module is
     
     Port ( 
         -- Clocks & Reset
-        SYSCLK          : in std_logic; -- ECS-TXO-3225MV 40 MHz
-        USB_CLKOUT      : in std_logic; -- 60 mhz clock from ft2232h to drive logic
-        RESET           : in std_logic; -- idle high, active low
+        sysclk          : in std_logic; -- ECS-TXO-3225MV 40 MHz
+        usb_clkout      : in std_logic; -- 60 mhz clock from ft2232h to drive logic
+        reset_n           : in std_logic; -- idle high, active low
 
         -- ADF4158
-        ADF_CE          : out std_logic;   -- Controlled by pin0 of 16 bit gpio out of microblaze and written 1 in microblaze to enable device once
-        ADF_TXDATA      : out std_logic;   -- not used = 0
-        ADF_CLK         : out std_logic;   -- SPI CLK
-        ADF_DATA        : out std_logic;   -- SPI MOSI
-        ADF_DONE        : in std_logic;    -- DNP Mosfet connection. Not used
-        ADF_LE          : out std_logic;   -- Chip Enable / Select for SPI device 
-        ADF_MUXOUT      : in std_logic;    -- Read rampDel length high pulse on this pin to know ramp start and end
+        adf_ce          : out std_logic;   -- Controlled by pin0 of 16 bit gpio out of microblaze and written 1 in microblaze to enable device once
+        adf_txdata      : out std_logic;   -- not used = 0
+        adf_clk         : out std_logic;   -- SPI CLK
+        adf_data        : out std_logic;   -- SPI MOSI
+        adf_done        : in std_logic;    -- DNP Mosfet connection. Not used
+        adf_le          : out std_logic;   -- Chip Enable / Select for SPI device 
+        adf_muxout      : in std_logic;    -- Read rampDel length high pulse on this pin to know ramp start and end
 
         -- LTC2292 ADC
-        ADC_DATA        : in std_logic_vector(11 downto 0);
-        ADC_OF          : in std_logic_vector(1 downto 0); -- adc outputs 1 when overflow underflow (saturation) occurs.
-        ADC_OE          : out std_logic_vector(1 downto 0);
-        ADC_SHDN        : out std_logic_vector(1 downto 0);
+        adc_data        : in std_logic_vector(11 downto 0);
+        adc_of          : in std_logic_vector(1 downto 0); -- adc outputs 1 when overflow underflow (saturation) occurs.
+        adc_oe          : out std_logic_vector(1 downto 0);
+        adc_shdn        : out std_logic_vector(1 downto 0);
 
         -- FT2232H USB
-        USB_DATA        : inout std_logic_vector(7 downto 0);
-        USB_RXF         : in std_logic;
-        USB_TXE         : in std_logic;
-        USB_RD          : out std_logic;
-        USB_WR          : out std_logic;
-        USB_SIWUA       : out std_logic; -- write 1 to not used 
-        USB_OE          : out std_logic;
-        USB_SUSPEND     : in std_logic; -- input to indicate if usb is in suspend mode (not used)
+        usb_data        : inout std_logic_vector(7 downto 0);
+        usb_rxf         : in std_logic;
+        usb_txe         : in std_logic;
+        usb_rd          : out std_logic;
+        usb_wr          : out std_logic;
+        usb_siwua       : out std_logic; -- write 1 to not used 
+        usb_oe          : out std_logic;
+        usb_suspend     : in std_logic; -- input to indicate if usb is in suspend mode (not used)
 
         -- Onboard LED
-        LED1            : out std_logic;
+        led1            : out std_logic;
 
         -- TQP5525 PA
-        PA_EN           : out std_logic;
+        pa_en           : out std_logic;
 
         -- ADL5802 Mixer
-        MIX_EN          : out std_logic;
+        mix_en          : out std_logic;
 
         -- External Connectors
-        EXT1            : out std_logic_vector(5 downto 0);
-        EXT2            : out std_logic_vector(5 downto 0);
+        ext1            : out std_logic_vector(5 downto 0);
+        ext2            : out std_logic_vector(5 downto 0);
 
         -- SD Card
         SD_DATA         : inout std_logic_vector(3 downto 0);
@@ -68,6 +68,15 @@ entity top_module is
 end top_module;
 
 architecture Behavioral of top_module is
+    
+    component clk_wiz_0
+      port (
+        clk_out1 : out std_logic; -- 40
+        clk_out2 : out std_logic; -- 100 for microblaze
+        resetn   : in  std_logic;
+        clk_in1  : in  std_logic -- 40 system in
+      );
+    end component;
 
     -- In general logic
     -- Microblaze will configure adf4158 with spi.
@@ -100,7 +109,7 @@ architecture Behavioral of top_module is
     port (
         -- Bus signals
         clk         : in std_logic;
-        reset       : in std_logic; -- active low
+        reset_n     : in std_logic; -- active low
         read_n      : in std_logic;
         write_n     : in std_logic;
         chipselect  : in std_logic;
@@ -126,8 +135,8 @@ architecture Behavioral of top_module is
         );
         port (
             clk             : in  std_logic;
-            reset           : in  std_logic; -- active low reset
-            soft_reset      : in  std_logic; -- active low software reset by microblaze to reset modules for next radar op
+            reset_n         : in  std_logic; -- active low reset
+            soft_reset_n    : in  std_logic; -- active low software reset by microblaze to reset modules for next radar op
             usb_rx_empty    : in  std_logic;
             usb_readdata    : in  std_logic_vector(7 downto 0);
             chipselect      : out std_logic;
@@ -143,8 +152,8 @@ architecture Behavioral of top_module is
     );
     port (
         clk                         : in  std_logic; -- system clock
-        reset                       : in  std_logic; -- active low reset
-        soft_reset                  : in  std_logic; -- active low software reset by microblaze to reset modules for next radar op
+        reset_n                     : in  std_logic; -- active low reset
+        soft_reset_n                : in  std_logic; -- active low software reset by microblaze to reset modules for next radar op
         muxout                      : in  std_logic; -- high during ramp
 
         -- ADC inputs
@@ -164,6 +173,7 @@ architecture Behavioral of top_module is
         usb_writedata               : out std_logic_vector(7 downto 0);
         usb_tx_full                 : in  std_logic;
         
+        microblaze_ramp_configured  : in std_logic; -- microblaze sends this signal that ramp is configured radar can start op
         microblaze_sampling_done    : in std_logic; -- microblaze will calculate total sampling time and tell control module to stop sampling
         ramp_done                   : out std_logic -- debugging signal
 
@@ -180,23 +190,26 @@ architecture Behavioral of top_module is
     );
     end component;
     
-    -- Microblaze signals
-    signal s_gpio_rtl_0_tri_o : STD_LOGIC_VECTOR ( 15 downto 0 ) := (others => '0');
-    signal s_uart_rtl_0_rxd   : STD_LOGIC := '1';
-    signal s_uart_rtl_0_txd   : STD_LOGIC := '1';
+    signal clk_40mhz    : std_logic;
+    signal clk_100mhz   : std_logic;
     
-    signal s_spi0_miso          : STD_LOGIC := 'Z';  -- ADF4158 does not have spi miso line so microblaze is connected to this internal signal
-    signal s_spi0_cs            : STD_LOGIC := '1';  -- LE pin will be controlled with gpio so this spi's cs will only be connected to internal signal for now
+    -- Microblaze signals
+    signal s_gpio_rtl_0_tri_o       : STD_LOGIC_VECTOR ( 15 downto 0 ) := (others => '0');
+    signal s_uart_rtl_0_rxd         : STD_LOGIC := '1';
+    signal s_uart_rtl_0_txd         : STD_LOGIC := '1';
+    
+    signal s_spi0_miso              : STD_LOGIC := 'Z';  -- ADF4158 does not have spi miso line so microblaze is connected to this internal signal
+    signal s_spi0_cs                : STD_LOGIC := '1';  -- LE pin will be controlled with gpio so this spi's cs will only be connected to internal signal for now
         
     -- ADC signals
-    signal s_adc_a_out  : std_logic_vector(15 downto 0) := (others => '0');         -- channel A data
-    signal s_adc_b_out  : std_logic_vector(15 downto 0) := (others => '0');         -- channel B data
-    signal s_adc_valid  : std_logic := '0';        -- FIR output valid pulse
+    signal s_adc_a_out              : std_logic_vector(15 downto 0) := (others => '0');         -- channel A data
+    signal s_adc_b_out              : std_logic_vector(15 downto 0) := (others => '0');         -- channel B data
+    signal s_adc_valid              : std_logic := '0';        -- FIR output valid pulse
 
     -- USB_SYNC signals
-    signal s_chipselect  : std_logic := '0';
-    signal s_tx_full     : std_logic := '0';
-    signal s_rx_empty    : std_logic := '1';
+    signal s_chipselect             : std_logic := '0';
+    signal s_tx_full                : std_logic := '0';
+    signal s_rx_empty               : std_logic := '1';
         
     -- CONFIG signals
     signal s_config_done            : std_logic := '0';   
@@ -211,7 +224,7 @@ architecture Behavioral of top_module is
     signal s_control_usb_writedata   : std_logic_vector(7 downto 0) := (others => '0');
 
     signal s_microblaze_done         : std_logic := '0';
-    signal s_soft_reset              : std_logic := '1';
+    signal s_soft_reset_n            : std_logic := '1';
     signal s_ramp_done               : std_logic := '0';
     signal s_ramp_configured         : std_logic := '0';
 
@@ -248,43 +261,51 @@ begin
     -- ADC_OE   <= "00"; -- both channels enabled
     -- ADC_SHDN <= "00"; -- normal operation
     
-    MIX_EN <= '1';
+    mix_en <= '1';
     
     -- Not used for now
-    EXT1 <= (others => '0');
-    EXT2 <= (others => '0');
+    ext1 <= (others => '0');
+    ext2 <= (others => '0');
         
-    ADF_TXDATA <= '0'; -- not used. this is for data modulation
+    adf_txdata <= '0'; -- not used. this is for data modulation
         
-    ADF_CE                      <= s_gpio_rtl_0_tri_o(0); -- microblaze 16 bit gpio's bit 0 is controlling this. It will be written 1 to power device
-    ADF_LE                      <= s_gpio_rtl_0_tri_o(1); -- microblaze 16 bit gpio's bit 1 is spi_cs of adf4158
+    adf_ce                      <= s_gpio_rtl_0_tri_o(0); -- microblaze 16 bit gpio's bit 0 is controlling this. It will be written 1 to power device
+    adf_le                      <= s_gpio_rtl_0_tri_o(1); -- microblaze 16 bit gpio's bit 1 is spi_cs of adf4158
     s_microblaze_done           <= s_gpio_rtl_0_tri_o(2); -- microblaze 16 bit gpio's bit 2 is microblaze's done signal to finish sampling
-    -- This ramp configured is not necessary for now but i have added anyways
     s_ramp_configured           <= s_gpio_rtl_0_tri_o(3); -- microblaze 16 bit gpio's bit 3 is ramp configured signal
-    s_soft_reset                <= s_gpio_rtl_0_tri_o(4); -- microblaze 16 bit gpio's bit 4 is software reset to reset everything instead of handshake singals between modules.
+    s_soft_reset_n              <= s_gpio_rtl_0_tri_o(4); -- microblaze 16 bit gpio's bit 4 is software reset to reset everything instead of handshake singals between modules.
     
     
     -- connect chipselect according to if config is done or not.
     -- if config is done then usb control can start using usb
     s_chipselect <= s_config_usb_chipselect when s_config_done = '0' else s_control_usb_chipselect;
            
-    process(SYSCLK)
+    -- Component instantiation
+    clk_wiz_0_inst : clk_wiz_0
+      port map (
+        clk_out1 => clk_40mhz,
+        clk_out2 => clk_100mhz,
+        resetn   => reset_n,
+        clk_in1  => sysclk
+    );
+           
+    process(clk_40mhz)
     begin
-        if rising_edge(SYSCLK) then
-            muxout_sync_d <= ADF_MUXOUT;
+        if rising_edge(clk_40mhz) then
+            muxout_sync_d <= adf_muxout;
             muxout_sync <= muxout_sync_d;
         end if;
     end process;    
        
     microblaze_i: component microblaze_wrapper
     port map (
-        clk_100MHz                      => SYSCLK,
+        clk_100MHz                      => clk_100mhz,
         gpio_rtl_0_tri_o(15 downto 0)   => s_gpio_rtl_0_tri_o(15 downto 0),
-        reset_rtl_0                     => RESET,           -- Board's reset is active low
+        reset_rtl_0                     => reset_n,           -- Board's reset is active low
         spi0_cs(0)                      => s_spi0_cs,       -- spi cs not used, gpio is used to drive cs pin
         spi0_miso                       => s_spi0_miso,     -- spi miso not used
-        spi0_mosi                       => ADF_DATA,        -- spi mosi
-        spi0_sck                        => ADF_CLK,         -- spi clk
+        spi0_mosi                       => adf_data,        -- spi mosi
+        spi0_sck                        => adf_clk,         -- spi clk
         uart_rtl_0_rxd                  => s_uart_rtl_0_rxd,
         uart_rtl_0_txd                  => s_uart_rtl_0_txd
     );
@@ -305,8 +326,8 @@ begin
     -- ADC instantiation
     adc_i : component adc
     port map (
-        clk      => SYSCLK,
-        adc_data => ADC_DATA,
+        clk      => clk_40mhz,
+        adc_data => adc_data,
         data_a   => s_adc_a_out,
         data_b   => s_adc_b_out,
         valid    => s_adc_valid
@@ -316,8 +337,8 @@ begin
     
     usb_sync_i : component usb_sync
     port map (
-        clk         => SYSCLK,
-        reset       => RESET,
+        clk         => clk_40mhz,
+        reset_n     => reset_n,
         read_n      => s_config_usb_read_n,     -- 0 to read from rx fifo of usb_sync (config reads usb to get python script's setup parameters)
         write_n     => s_control_usb_write_n,   -- 0 to write to tx fifo of usb_sync (control writes usb to send adc data to python)
         chipselect  => s_chipselect,            -- 1 to selectchip for both read and write    
@@ -327,23 +348,23 @@ begin
         rx_empty    => s_rx_empty,              -- is empty flag
     
         -- FT2232 Bus Signals
-        usb_clock   => USB_CLKOUT,
-        usb_data    => USB_DATA,
-        usb_rd_n    => USB_RD,
-        usb_wr_n    => USB_WR,
-        usb_oe_n    => USB_OE,
-        usb_rxf_n   => USB_RXF,         -- input signal to indicate rx data over usb
-        usb_txe_n   => USB_TXE          -- input signal to indicate usb is available for tx
+        usb_clock   => usb_clkout,
+        usb_data    => usb_data,
+        usb_rd_n    => usb_rd,
+        usb_wr_n    => usb_wr,
+        usb_oe_n    => usb_oe,
+        usb_rxf_n   => usb_rxf,         -- input signal to indicate rx data over usb
+        usb_txe_n   => usb_txe          -- input signal to indicate usb is available for tx
     );
 
     config_i : component config
-    --generic map (
-      --  PACKET_SIZE => CONFIG_PACKET_SIZE
-    --)
+    generic map (
+        PACKET_SIZE => CONFIG_PACKET_SIZE
+    )
     port map (
-        clk          => SYSCLK,
-        reset        => RESET,        -- top-level reset signal
-        soft_reset   => s_soft_reset,
+        clk          => clk_40mhz,
+        reset_n      => reset_n,        -- top-level reset signal
+        soft_reset_n => s_soft_reset_n,
         usb_rx_empty => s_rx_empty,
         usb_readdata => s_config_usb_readdata,
         chipselect   => s_config_usb_chipselect,
@@ -354,22 +375,22 @@ begin
     
     -- Control FSM instantiation    
     control_i : control
-    --generic map (
-      --  MAX_SAMPLES => MAX_ADC_SAMPLES  -- adjust according to ramp length
-    --)
+    generic map (
+        MAX_SAMPLES => MAX_ADC_SAMPLES  -- adjust according to ramp length
+    )
     port map (
-        clk                         => SYSCLK,
-        reset                       => RESET,
-        soft_reset                  => s_soft_reset,
+        clk                         => clk_40mhz,
+        reset_n                     => reset_n,
+        soft_reset_n                => s_soft_reset_n,
         muxout                      => muxout_sync,     -- ADF4158 MUXOUT input high pulse during ramp
         
         adc_data_a                  => s_adc_a_out,
         adc_data_b                  => s_adc_b_out,
         adc_valid                   => s_adc_valid,
-        adc_oe                      => ADC_OE,
-        adc_shdn                    => ADC_SHDN,
+        adc_oe                      => adc_oe,
+        adc_shdn                    => adc_shdn,
         
-        pa_en                       => PA_EN,
+        pa_en                       => pa_en,
         config_done                 => s_config_done,   -- input from config module to start sampling
         
         usb_write_n                 => s_control_usb_write_n,
@@ -377,13 +398,14 @@ begin
         usb_writedata               => s_control_usb_writedata,
         usb_tx_full                 => s_tx_full,
         
+        microblaze_ramp_configured  => s_ramp_configured,
         microblaze_sampling_done    => s_microblaze_done,
         ramp_done                   => s_ramp_done
     );
 
     ila_0_i : ila_0
     port map (
-        clk    => SYSCLK,
+        clk    => clk_40mhz,
         probe0 => s_probe0,
         probe1 => s_probe1,
         probe2 => s_probe2,
