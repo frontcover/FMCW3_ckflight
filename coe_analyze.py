@@ -3,19 +3,17 @@ import matplotlib.pyplot as plt
 from scipy.signal import freqz
 
 # -----------------------------
-# CONFIG: Change the filename and sampling rate
+# CONFIG
 # -----------------------------
-#coe_file = "C:/Users/CK/Desktop/coe_analyze/fir20.coe"
-coe_file = "C:/Users/CK/Desktop/coe_analyze/fir_downsampler.coe"
-Fs = 40e6  # ADC sampling rate in Hz
+coe_file = "/home/ck/Desktop/Workspace/FPGA_Workspace/VIVADO_PROJECTS/FMCW3/fir20.coe"
+Fs = 40e6  # Sampling rate (Hz)
 
 # -----------------------------
-# STEP 1: Load coefficients
+# LOAD COEFFICIENTS
 # -----------------------------
 with open(coe_file, 'r') as f:
     lines = f.readlines()
 
-# Find line with "CoefData="
 coef_line = None
 for line in lines:
     if "CoefData" in line:
@@ -25,44 +23,41 @@ for line in lines:
 if coef_line is None:
     raise ValueError("No CoefData found in the COE file.")
 
-# Convert to float array
 coefs = np.array([float(x) for x in coef_line.split(',')])
-
 print(f"Number of taps: {len(coefs)}")
 print(f"First 10 coefficients: {coefs[:10]}")
 
 # -----------------------------
-# STEP 2: Plot impulse response
+# FREQUENCY RESPONSE
 # -----------------------------
-plt.figure(figsize=(10,4))
-plt.stem(coefs)
-plt.title("FIR Impulse Response")
-plt.xlabel("Tap Index")
-plt.ylabel("Coefficient")
-plt.grid(True)
-plt.show()
+w, h = freqz(coefs, worN=2048)
+freq_hz = w * Fs / (2 * np.pi)
 
 # -----------------------------
-# STEP 3: Compute and plot frequency response
+# PLOTS (All in One Page)
 # -----------------------------
-w, h = freqz(coefs, worN=2048)  # Frequency response
-freq_hz = w * Fs / (2 * np.pi)  # Convert from rad/sample to Hz
+fig, axs = plt.subplots(3, 1, figsize=(10, 10))
 
-plt.figure(figsize=(10,4))
-plt.plot(freq_hz/1e6, 20*np.log10(np.abs(h)))  # Frequency in MHz
-plt.title("FIR Magnitude Response")
-plt.xlabel("Frequency (MHz)")
-plt.ylabel("Magnitude (dB)")
-plt.grid(True)
-plt.show()
+# Impulse Response
+axs[0].stem(coefs, basefmt=" ")
+axs[0].set_title("FIR Impulse Response")
+axs[0].set_xlabel("Tap Index")
+axs[0].set_ylabel("Coefficient")
+axs[0].grid(True)
 
-# -----------------------------
-# Optional: Phase response
-# -----------------------------
-plt.figure(figsize=(10,4))
-plt.plot(freq_hz/1e6, np.angle(h))
-plt.title("FIR Phase Response")
-plt.xlabel("Frequency (MHz)")
-plt.ylabel("Phase (radians)")
-plt.grid(True)
+# Magnitude Response
+axs[1].plot(freq_hz / 1e6, 20 * np.log10(np.abs(h)))
+axs[1].set_title("FIR Magnitude Response")
+axs[1].set_xlabel("Frequency (MHz)")
+axs[1].set_ylabel("Magnitude (dB)")
+axs[1].grid(True)
+
+# Phase Response
+axs[2].plot(freq_hz / 1e6, np.angle(h))
+axs[2].set_title("FIR Phase Response")
+axs[2].set_xlabel("Frequency (MHz)")
+axs[2].set_ylabel("Phase (radians)")
+axs[2].grid(True)
+
+plt.tight_layout()
 plt.show()
