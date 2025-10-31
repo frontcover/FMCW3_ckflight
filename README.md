@@ -6,14 +6,12 @@ This project implements the complete digital backend of an FMCW radar system usi
 
 The design separates slow-control and high-speed signal processing into two domains:
 
-MicroBlaze Subsystem:
-Handles low-speed configuration of on-board ICs (ADF4158 PLL, ADCs, amplifiers) through GPIO, SPI, and UART interfaces.
+**MicroBlaze Subsystem:**
+Handles low-speed configuration of on-board ICs (ADF4158 PLL, amplifier) through GPIO, SPI, and UART interfaces.
 Generates control signals such as ramp start, ramp configured, and sampling done flags.
 
-FPGA Logic Subsystem:
-Dedicated to high-speed ADC data acquisition and USB 2.0 data transfer to the host PC using an FT2232H in synchronous FIFO mode.
-
-Main Modules
+**FPGA Logic Subsystem:**
+Dedicated to high-speed ADC data acquisition and USB 2.0 data transfer to the host PC using an FT2232H in synchronous FIFO mode. Main modules of fpga design are:
 
 microblaze_wrapper.vhd — Soft CPU with AXI peripherals for SPI, GPIO, and UART configuration.
 
@@ -63,7 +61,7 @@ Software reset and handshake signals between VHDL logic and MicroBlaze firmware
 
 Extendable for BRAM-based data exchange or AXI-DMA streaming
 
-🧠 Next Steps
+**🧠 Next Steps**
 
 Implement shared dual-port BRAM for configuration data exchange with MicroBlaze
 
