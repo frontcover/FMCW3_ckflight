@@ -15,17 +15,27 @@ Generates control signals such as ramp start, ramp configured, and sampling done
 **FPGA Logic Subsystem:**
 Dedicated to high-speed ADC data acquisition and USB 2.0 data transfer to the host PC using an FT2232H in synchronous FIFO mode. Main modules of fpga design are:
 
-microblaze_wrapper.vhd — Soft CPU with AXI peripherals for SPI, GPIO, and UART configuration.
+microblaze_wrapper.vhd — Soft CPU subsystem with AXI peripherals for SPI, GPIO, and UART. Handles configuration of the ADF4158 PLL, ADC, and peripheral devices.
 
-config.vhd — Receives configuration packets from the host over USB; stores and forwards parameters to MicroBlaze.
+config.vhd — Receives radar configuration packets from the host PC over USB; verifies framing and transfers parameters to MicroBlaze; asserts config_done when complete.
 
-control.vhd — FSM managing ADC enable/disable, PA control, and USB write timing synchronized to ADF4158 MUXOUT.
+control.vhd — Main FSM that coordinates ADC sampling during ramp (MUXOUT = 1), USB transmission during gap, and controls PA enable and ADC OE/SHDN lines.
 
-adc.vhd — Interleaved dual-phase ADC capture with FIR decimation by 20.
+adc.vhd — Dual-phase ADC interface performing interleaved capture of two channels.
 
-usb_sync.vhd — Implements the FT2232H synchronous FIFO interface for reliable bidirectional USB communication.
+Includes fir_compiler_0 IP cores (g_fir.fir1, g_fir.fir2) for low-pass filtering and ×20 decimation, generating synchronized data_a / data_b outputs.
 
-clk_wiz_0 — MMCM generating separate 40 MHz (logic) and 100 MHz (MicroBlaze) domains.
+usb_sync.vhd — Implements the FT2232H synchronous FIFO interface for USB 2.0 data transfer.
+
+Contains two fifo_generator_0 IP cores:
+
+rx_dcfifo – Receives configuration data from PC (RX path).
+
+tx_dcfifo – Buffers outgoing ADC samples to USB (TX path).
+
+clk_wiz_0 — MMCM generating both 40 MHz (logic) and 100 MHz (MicroBlaze) clock domains with phase alignment.
+
+ila_0 — Integrated Logic Analyzer core used for hardware-level probing of control FSM states, ADC valid pulses, and USB FIFO activity.
 
 **🧩 Simulation Results**
 
