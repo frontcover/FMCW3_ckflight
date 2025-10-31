@@ -15,27 +15,21 @@ Generates control signals such as ramp start, ramp configured, and sampling done
 **FPGA Logic Subsystem:**
 Dedicated to high-speed ADC data acquisition and USB 2.0 data transfer to the host PC using an FT2232H in synchronous FIFO mode. Main modules of fpga design are:
 
-*microblaze_wrapper.vhd* — Soft CPU subsystem with AXI peripherals for SPI, GPIO, and UART. Handles configuration of the ADF4158 PLL, ADC, and peripheral devices.
+**microblaze_wrapper.vhd** — Soft CPU subsystem with AXI peripherals for SPI, GPIO, and UART. Handles configuration of the ADF4158 PLL, ADC, and peripheral devices.
 
-config.vhd — Receives radar configuration packets from the host PC over USB; verifies framing and transfers parameters to MicroBlaze; asserts config_done when complete.
+**config.vhd** — Receives radar configuration packets from the host PC over USB; verifies framing and transfers parameters to MicroBlaze; asserts config_done when complete.
 
-control.vhd — Main FSM that coordinates ADC sampling during ramp (MUXOUT = 1), USB transmission during gap, and controls PA enable and ADC OE/SHDN lines.
+**control.vhd** — Main FSM that coordinates ADC sampling during ramp (MUXOUT = 1), USB transmission during gap, and controls PA enable and ADC OE/SHDN lines.
 
-adc.vhd — Dual-phase ADC interface performing interleaved capture of two channels.
+**adc.vhd** — Dual-phase ADC interface performing interleaved capture of two channels. Includes fir_compiler_0 IP cores (g_fir.fir1, g_fir.fir2) for low-pass filtering and ×20 decimation, generating synchronized data_a / data_b outputs.
 
-Includes fir_compiler_0 IP cores (g_fir.fir1, g_fir.fir2) for low-pass filtering and ×20 decimation, generating synchronized data_a / data_b outputs.
+**usb_sync.vhd** — Implements the FT2232H synchronous FIFO interface for USB 2.0 data transfer.
 
-usb_sync.vhd — Implements the FT2232H synchronous FIFO interface for USB 2.0 data transfer.
+Contains two fifo_generator_0 IP cores: rx_dcfifo – Receives configuration data from PC (RX path). tx_dcfifo – Buffers outgoing ADC samples to USB (TX path).
 
-Contains two fifo_generator_0 IP cores:
+**clk_wiz_0** — MMCM generating both 40 MHz (logic) and 100 MHz (MicroBlaze) clock domains with phase alignment.
 
-rx_dcfifo – Receives configuration data from PC (RX path).
-
-tx_dcfifo – Buffers outgoing ADC samples to USB (TX path).
-
-clk_wiz_0 — MMCM generating both 40 MHz (logic) and 100 MHz (MicroBlaze) clock domains with phase alignment.
-
-ila_0 — Integrated Logic Analyzer core used for hardware-level probing of control FSM states, ADC valid pulses, and USB FIFO activity.
+**ila_0** — Integrated Logic Analyzer core used for hardware-level probing of control FSM states, ADC valid pulses, and USB FIFO activity.
 
 **🧩 Simulation Results**
 
