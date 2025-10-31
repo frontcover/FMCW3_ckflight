@@ -31,6 +31,12 @@ Contains two fifo_generator_0 IP cores: rx_dcfifo – Receives configuration dat
 
 **ila_0** — Integrated Logic Analyzer core used for hardware-level probing of control FSM states, ADC valid pulses, and USB FIFO activity.
 
+
+**Coe file analyzer python script:**
+
+<img width="3657" height="1925" alt="Image" src="https://github.com/user-attachments/assets/11672161-dc26-4822-9536-ca332e899273" />
+
+
 **🧩 Simulation Results**
 
 
