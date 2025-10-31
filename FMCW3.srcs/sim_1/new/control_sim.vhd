@@ -10,8 +10,8 @@ architecture sim of control_sim is
     constant CLK_PERIOD : time := 10 ns;
 
     signal clk                      : std_logic := '0';
-    signal reset                    : std_logic := '1';
-    signal soft_reset               : std_logic := '1';
+    signal reset_n                    : std_logic := '1';
+    signal soft_reset_n               : std_logic := '1';
     signal muxout                   : std_logic := '0';
     signal adc_data_a               : std_logic_vector(15 downto 0) := (others => '0');
     signal adc_data_b               : std_logic_vector(15 downto 0) := (others => '0');
@@ -24,6 +24,7 @@ architecture sim of control_sim is
     signal usb_write_n              : std_logic;
     signal usb_writedata            : std_logic_vector(7 downto 0);
     signal usb_tx_full              : std_logic := '0';
+    signal microblaze_ramp_configured : std_logic := '0';
     signal microblaze_sampling_done : std_logic := '0';
     signal ramp_done                : std_logic := '0';
 
@@ -32,8 +33,8 @@ begin
     DUT: entity work.control
         port map (
             clk                      => clk,
-            reset                    => reset,
-            soft_reset               => soft_reset,
+            reset_n                  => reset_n,
+            soft_reset_n             => soft_reset_n,
             muxout                   => muxout,
             adc_data_a               => adc_data_a,
             adc_data_b               => adc_data_b,
@@ -46,6 +47,7 @@ begin
             usb_write_n              => usb_write_n,
             usb_writedata            => usb_writedata,
             usb_tx_full              => usb_tx_full,
+            microblaze_ramp_configured => microblaze_ramp_configured,
             microblaze_sampling_done => microblaze_sampling_done,
             ramp_done                => ramp_done
         );
@@ -78,11 +80,12 @@ begin
         end procedure;
     begin
         report "Simulation started - resetting DUT";
-        reset <= '0';
+        reset_n <= '0';
         wait for 3 * CLK_PERIOD;
-        reset <= '1';
+        reset_n <= '1';
         wait for 5 * CLK_PERIOD;
         config_done <= '1';
+        microblaze_ramp_configured <= '1';
         report "Reset released, config_done set";
 
         wait for 10 * CLK_PERIOD;
@@ -97,15 +100,16 @@ begin
         microblaze_sampling_done <= '0';
         
         report "Soft reset triggered";
-        soft_reset <= '0';
+        soft_reset_n <= '0';
         config_done <= '0';
         wait for 100 * CLK_PERIOD;
-        soft_reset <= '1';
+        soft_reset_n <= '1';
         
 
         wait for 100 * CLK_PERIOD;
         config_done <= '1';
-        
+        microblaze_ramp_configured <= '1';
+
         -- I have tested both clearing microblaze done before or after software reset
         --wait for 1000 * CLK_PERIOD;
         --microblaze_sampling_done <= '0';

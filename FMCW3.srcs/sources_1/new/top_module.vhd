@@ -260,7 +260,8 @@ begin
     -- Drive ADC OE/SHDN pins for normal operation
     -- ADC_OE   <= "00"; -- both channels enabled
     -- ADC_SHDN <= "00"; -- normal operation
-    
+ 
+ 
     mix_en <= '1';
     
     -- Not used for now

@@ -10,8 +10,8 @@ architecture sim of config_sim is
     constant PACKET_SIZE : integer := 64;
 
     signal clk          : std_logic := '0';
-    signal reset        : std_logic := '1';
-    signal soft_reset   : std_logic := '0';
+    signal reset_n        : std_logic := '1';
+    signal soft_reset_n   : std_logic := '0';
     signal usb_rx_empty : std_logic := '1';  -- like RXF#: 1 = empty
     signal usb_readdata : std_logic_vector(7 downto 0) := (others => '0');
     signal chipselect   : std_logic;
@@ -33,8 +33,8 @@ architecture sim of config_sim is
         );
         port (
             clk          : in  std_logic;
-            reset        : in  std_logic;
-            soft_reset   : in  std_logic;
+            reset_n        : in  std_logic;
+            soft_reset_n   : in  std_logic;
             usb_rx_empty : in  std_logic;
             usb_readdata : in  std_logic_vector(7 downto 0);
             chipselect   : out std_logic;
@@ -54,8 +54,8 @@ begin
         )
         port map (
             clk          => clk,
-            reset        => reset,
-            soft_reset   => soft_reset,
+            reset_n        => reset_n,
+            soft_reset_n   => soft_reset_n,
             usb_rx_empty => usb_rx_empty,
             usb_readdata => usb_readdata,
             chipselect   => chipselect,
@@ -83,9 +83,9 @@ begin
     begin
         -- Reset phase
         wait for 50 ns;
-        reset <= '0';
+        reset_n <= '0';
         wait for 50 ns;
-        reset <= '1';
+        reset_n <= '1';
 
         -- Fill FTDI data buffer
         for i in 0 to PACKET_SIZE-1 loop

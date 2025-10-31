@@ -11,8 +11,8 @@ architecture sim of config_sim3 is
 
     -- DUT signals
     signal clk          : std_logic := '0';
-    signal reset        : std_logic := '1';
-    signal soft_reset   : std_logic := '1';
+    signal reset_n        : std_logic := '1';
+    signal soft_reset_n   : std_logic := '1';
     signal usb_rx_empty : std_logic := '1';
     signal usb_readdata : std_logic_vector(7 downto 0) := (others => '0');
     signal chipselect   : std_logic;
@@ -34,8 +34,8 @@ begin
         )
         port map (
             clk          => clk,
-            reset        => reset,
-            soft_reset   => soft_reset,
+            reset_n      => reset_n,
+            soft_reset_n => soft_reset_n,
             usb_rx_empty => usb_rx_empty,
             usb_readdata => usb_readdata,
             chipselect   => chipselect,
@@ -90,9 +90,9 @@ begin
         -- INITIAL RESET
         ----------------------------------------------------------------
         report "Simulation started - applying global reset";
-        reset <= '0';
+        reset_n <= '0';
         wait for 50 ns;
-        reset <= '1';
+        reset_n <= '1';
         wait for 50 ns;
 
         report "Reset released - config module ready";
@@ -107,9 +107,9 @@ begin
         -- SOFT RESET 1
         ----------------------------------------------------------------
         report "Applying soft reset...";
-        soft_reset <= '0';
+        soft_reset_n <= '0';
         wait for 50 ns;
-        soft_reset <= '1';
+        soft_reset_n <= '1';
         report "Soft reset released";
 
         wait for 100 ns;
@@ -120,18 +120,18 @@ begin
         -- SOFT RESET 2
         ----------------------------------------------------------------
         report "Applying second soft reset...";
-        soft_reset <= '0';
+        soft_reset_n <= '0';
         wait for 50 ns;
-        soft_reset <= '1';
+        soft_reset_n <= '1';
         report "Soft reset released again";
 
         wait for 100 ns;
         simulate_python_transfer;
         wait for 100 ns;
         
-        reset <= '0';
+        reset_n <= '0';
         wait for 50 ns;
-        reset <= '1';
+        reset_n <= '1';
         wait for 50 ns;
 
         simulate_python_transfer;
