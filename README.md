@@ -15,7 +15,7 @@ Generates control signals such as ramp start, ramp configured, and sampling done
 **FPGA Logic Subsystem:**
 Dedicated to high-speed ADC data acquisition and USB 2.0 data transfer to the host PC using an FT2232H in synchronous FIFO mode. Main modules of fpga design are:
 
-microblaze_wrapper.vhd — Soft CPU subsystem with AXI peripherals for SPI, GPIO, and UART. Handles configuration of the ADF4158 PLL, ADC, and peripheral devices.
+*microblaze_wrapper.vhd* — Soft CPU subsystem with AXI peripherals for SPI, GPIO, and UART. Handles configuration of the ADF4158 PLL, ADC, and peripheral devices.
 
 config.vhd — Receives radar configuration packets from the host PC over USB; verifies framing and transfers parameters to MicroBlaze; asserts config_done when complete.
 
