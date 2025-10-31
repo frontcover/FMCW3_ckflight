@@ -10,6 +10,8 @@ The design separates slow-control and high-speed signal processing into two doma
 Handles low-speed configuration of on-board ICs (ADF4158 PLL, amplifier) through GPIO, SPI, and UART interfaces.
 Generates control signals such as ramp start, ramp configured, and sampling done flags.
 
+<img width="3247" height="1763" alt="Image" src="https://github.com/user-attachments/assets/9084a03e-cb5d-4922-b238-9044ed4b0134" />
+
 **FPGA Logic Subsystem:**
 Dedicated to high-speed ADC data acquisition and USB 2.0 data transfer to the host PC using an FT2232H in synchronous FIFO mode. Main modules of fpga design are:
 
