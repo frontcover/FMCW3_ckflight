@@ -15,19 +15,7 @@ entity config is
         usb_readdata     : in  std_logic_vector(7 downto 0);
         chipselect       : out std_logic;
         read_n           : out std_logic;
-        config_done      : out std_logic;
-        
-        -- AXI-Stream TX (MicroBlaze → VHDL)
-        fifotx_tdata     : in STD_LOGIC_VECTOR(31 downto 0);
-        fifotx_tlast     : in STD_LOGIC;
-        fifotx_tready    : out STD_LOGIC;
-        fifotx_tvalid    : in STD_LOGIC;
-        
-        -- AXI-Stream RX (VHDL → MicroBlaze)
-        fiforx_tdata     : out STD_LOGIC_VECTOR(31 downto 0);
-        fiforx_tlast     : out STD_LOGIC;
-        fiforx_tready    : in STD_LOGIC;
-        fiforx_tvalid    : out STD_LOGIC
+        config_done      : out std_logic
     );
 end config;
 
@@ -42,17 +30,11 @@ architecture Behavioral of config is
 
     -- Counter and storage
     signal byte_counter                 : integer range 0 to PACKET_SIZE-1 := 0;
-    signal configuration_bytes          : std_logic_vector(PACKET_SIZE*8-1 downto 0) := (others => '0');
+    signal configuration_bytes          : std_logic_vector(PACKET_SIZE*8-1 downto 0) := (others => '0');    
+
+    signal config_bytes_ready : std_logic := '0';
     
-    signal config_bytes_ready           : std_logic := '0';    
-    signal config_ready_sync, config_ready_d : std_logic := '0';
-    
-    signal fifo_byte_index              : integer range 0 to PACKET_SIZE-1 := 0;
 begin
-
-
-    -- mb to vhdl part not used for now. vhdl will be seen ready but logic to read data is not implemented yet. 
-    fifotx_tready <= '1';
     
     process(clk_40mhz, reset_n, soft_reset_n)
     begin
@@ -120,62 +102,5 @@ begin
         end if;
     end process;
 
-    process(clk_100mhz)
-    begin
-        if rising_edge(clk_100mhz) then
-            config_ready_d    <= config_bytes_ready;
-            config_ready_sync <= config_ready_d;
-        end if;
-    end process;
-    
-    process(clk_100mhz, reset_n, soft_reset_n)
-    begin
-        if reset_n = '0' or soft_reset_n = '0' then
-            fifo_st <= st_idle;
-            fifo_byte_index <= 0;
-            fiforx_tlast <= '0';
-            fiforx_tvalid <= '0';
-            fiforx_tdata <= (31 downto 0 => '0');
-            
-        elsif rising_edge(clk_100mhz) then
-            
-            case fifo_st is
-                
-                when st_idle =>
-                    if config_ready_sync = '1' then
-                        fiforx_tlast <= '0';
-                        fiforx_tvalid <= '0';
-                        fifo_byte_index <= 0;
-                        fifo_st <= st_send;                                                
-                    end if;
-                                
-                when st_send =>
-                    fiforx_tvalid <= '1';  -- keep asserted
-                    fiforx_tdata  <= (31 downto 8 => '0') & configuration_bytes(fifo_byte_index*8+7 downto fifo_byte_index*8);
-                
-                    if fiforx_tready = '1' then
-                        if fifo_byte_index = PACKET_SIZE - 1 then
-                            fiforx_tlast <= '1';
-                            fifo_st <= st_done;
-                        else
-                            fifo_byte_index <= fifo_byte_index + 1;
-                        end if;
-                    end if;
-                                
-                when st_done =>
-                    fiforx_tvalid <= '0';
-                    fiforx_tlast <= '0';
-                    fiforx_tdata <= (31 downto 0 => '0');
-                    --fifo_st <= st_idle; -- reset or soft_reset will make it start again               
-                
-                when others =>
-                    fifo_st <= st_idle;
-            
-            end case;
-        
-        end if;
-    
-    
-    end process;
     
 end Behavioral;

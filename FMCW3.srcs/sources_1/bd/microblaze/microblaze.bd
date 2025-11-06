@@ -1,7 +1,7 @@
 {
   "design": {
     "design_info": {
-      "boundary_crc": "0xD3A0FB33E84A7561",
+      "boundary_crc": "0xD49778C8ECE2B0A5",
       "device": "xc7a15tiftg256-1L",
       "gen_directory": "../../../../FMCW3.gen/sources_1/bd/microblaze",
       "name": "microblaze",
@@ -27,7 +27,6 @@
       "rst_clk_100MHz_100M": "",
       "axi_smc": "",
       "axi_intc_0": "",
-      "axi_fifo_mm_s_0": "",
       "xlconcat_0": ""
     },
     "interface_ports": {
@@ -56,155 +55,6 @@
           "TxD": {
             "physical_name": "uart_rtl_0_txd",
             "direction": "O"
-          }
-        }
-      },
-      "AXI_STR_TXD_0": {
-        "mode": "Master",
-        "vlnv_bus_definition": "xilinx.com:interface:axis:1.0",
-        "vlnv": "xilinx.com:interface:axis_rtl:1.0",
-        "parameters": {
-          "CLK_DOMAIN": {
-            "value": "microblaze_clk_100MHz",
-            "value_src": "default"
-          },
-          "FREQ_HZ": {
-            "value": "100000000",
-            "value_src": "default"
-          },
-          "HAS_TKEEP": {
-            "value": "0",
-            "value_src": "auto_prop"
-          },
-          "HAS_TLAST": {
-            "value": "1",
-            "value_src": "auto_prop"
-          },
-          "HAS_TREADY": {
-            "value": "1",
-            "value_src": "auto_prop"
-          },
-          "HAS_TSTRB": {
-            "value": "0",
-            "value_src": "auto_prop"
-          },
-          "INSERT_VIP": {
-            "value": "0",
-            "value_src": "default"
-          },
-          "LAYERED_METADATA": {
-            "value": "undef",
-            "value_src": "default"
-          },
-          "PHASE": {
-            "value": "0.0",
-            "value_src": "default"
-          },
-          "TDATA_NUM_BYTES": {
-            "value": "4",
-            "value_src": "auto_prop"
-          },
-          "TDEST_WIDTH": {
-            "value": "0",
-            "value_src": "auto_prop"
-          },
-          "TID_WIDTH": {
-            "value": "0",
-            "value_src": "auto_prop"
-          },
-          "TUSER_WIDTH": {
-            "value": "0",
-            "value_src": "auto_prop"
-          }
-        },
-        "port_maps": {
-          "TDATA": {
-            "physical_name": "AXI_STR_TXD_0_tdata",
-            "direction": "O",
-            "left": "31",
-            "right": "0"
-          },
-          "TLAST": {
-            "physical_name": "AXI_STR_TXD_0_tlast",
-            "direction": "O"
-          },
-          "TREADY": {
-            "physical_name": "AXI_STR_TXD_0_tready",
-            "direction": "I"
-          },
-          "TVALID": {
-            "physical_name": "AXI_STR_TXD_0_tvalid",
-            "direction": "O"
-          }
-        }
-      },
-      "AXI_STR_RXD_0": {
-        "mode": "Slave",
-        "vlnv_bus_definition": "xilinx.com:interface:axis:1.0",
-        "vlnv": "xilinx.com:interface:axis_rtl:1.0",
-        "parameters": {
-          "CLK_DOMAIN": {
-            "value": "microblaze_clk_100MHz",
-            "value_src": "default"
-          },
-          "FREQ_HZ": {
-            "value": "100000000",
-            "value_src": "default"
-          },
-          "HAS_TKEEP": {
-            "value": "0"
-          },
-          "HAS_TLAST": {
-            "value": "1"
-          },
-          "HAS_TREADY": {
-            "value": "1"
-          },
-          "HAS_TSTRB": {
-            "value": "0"
-          },
-          "INSERT_VIP": {
-            "value": "0",
-            "value_src": "default"
-          },
-          "LAYERED_METADATA": {
-            "value": "undef"
-          },
-          "PHASE": {
-            "value": "0.0",
-            "value_src": "default"
-          },
-          "TDATA_NUM_BYTES": {
-            "value": "4"
-          },
-          "TDEST_WIDTH": {
-            "value": "0"
-          },
-          "TID_WIDTH": {
-            "value": "0"
-          },
-          "TUSER_WIDTH": {
-            "value": "0"
-          }
-        },
-        "port_maps": {
-          "TDATA": {
-            "physical_name": "AXI_STR_RXD_0_tdata",
-            "direction": "I",
-            "left": "31",
-            "right": "0"
-          },
-          "TLAST": {
-            "physical_name": "AXI_STR_RXD_0_tlast",
-            "direction": "I"
-          },
-          "TREADY": {
-            "physical_name": "AXI_STR_RXD_0_tready",
-            "direction": "O"
-          },
-          "TVALID": {
-            "physical_name": "AXI_STR_RXD_0_tvalid",
-            "direction": "I"
           }
         }
       }
@@ -241,9 +91,6 @@
         "type": "clk",
         "direction": "I",
         "parameters": {
-          "ASSOCIATED_BUSIF": {
-            "value": "AXI_STR_TXD_0:AXI_STR_RXD_0"
-          },
           "CLK_DOMAIN": {
             "value": "microblaze_clk_100MHz",
             "value_src": "default"
@@ -723,6 +570,10 @@
               "M05_AXI"
             ],
             "bd_attributes": {
+              "BRIDGES": {
+                "value": "M00_AXI:M01_AXI:M02_AXI:M03_AXI:M04_AXI:M05_AXI",
+                "value_src": "auto"
+              },
               "TYPE": {
                 "value": "interior",
                 "value_src": "default"
@@ -935,43 +786,6 @@
           }
         }
       },
-      "axi_fifo_mm_s_0": {
-        "vlnv": "xilinx.com:ip:axi_fifo_mm_s:4.3",
-        "ip_revision": "7",
-        "xci_name": "microblaze_axi_fifo_mm_s_0_1",
-        "xci_path": "ip\\microblaze_axi_fifo_mm_s_0_1\\microblaze_axi_fifo_mm_s_0_1.xci",
-        "inst_hier_path": "axi_fifo_mm_s_0",
-        "has_run_ip_tcl": "true",
-        "parameters": {
-          "C_AXIS_TUSER_WIDTH": {
-            "value": "4"
-          },
-          "C_DATA_INTERFACE_TYPE": {
-            "value": "0"
-          },
-          "C_HAS_AXIS_TDEST": {
-            "value": "false"
-          },
-          "C_HAS_AXIS_TKEEP": {
-            "value": "false"
-          },
-          "C_HAS_AXIS_TSTRB": {
-            "value": "false"
-          },
-          "C_HAS_AXIS_TUSER": {
-            "value": "false"
-          },
-          "C_USE_RX_CUT_THROUGH": {
-            "value": "false"
-          },
-          "C_USE_RX_DATA": {
-            "value": "1"
-          },
-          "C_USE_TX_CTRL": {
-            "value": "0"
-          }
-        }
-      },
       "xlconcat_0": {
         "vlnv": "xilinx.com:ip:xlconcat:2.1",
         "ip_revision": "7",
@@ -982,18 +796,6 @@
       }
     },
     "interface_nets": {
-      "AXI_STR_RXD_0_1": {
-        "interface_ports": [
-          "AXI_STR_RXD_0",
-          "axi_fifo_mm_s_0/AXI_STR_RXD"
-        ]
-      },
-      "axi_fifo_mm_s_0_AXI_STR_TXD": {
-        "interface_ports": [
-          "AXI_STR_TXD_0",
-          "axi_fifo_mm_s_0/AXI_STR_TXD"
-        ]
-      },
       "axi_gpio_0_GPIO": {
         "interface_ports": [
           "gpio_rtl_0",
@@ -1028,12 +830,6 @@
         "interface_ports": [
           "axi_smc/M03_AXI",
           "axi_uartlite_0/S_AXI"
-        ]
-      },
-      "axi_smc_M04_AXI": {
-        "interface_ports": [
-          "axi_smc/M04_AXI",
-          "axi_fifo_mm_s_0/S_AXI"
         ]
       },
       "axi_smc_M05_AXI": {
@@ -1074,12 +870,6 @@
       }
     },
     "nets": {
-      "axi_fifo_mm_s_0_interrupt": {
-        "ports": [
-          "axi_fifo_mm_s_0/interrupt",
-          "xlconcat_0/In0"
-        ]
-      },
       "axi_quad_spi_0_io0_o": {
         "ports": [
           "axi_quad_spi_0/io0_o",
@@ -1128,8 +918,7 @@
           "axi_quad_spi_0/s_axi_aclk",
           "axi_timer_0/s_axi_aclk",
           "axi_uartlite_0/s_axi_aclk",
-          "axi_intc_0/s_axi_aclk",
-          "axi_fifo_mm_s_0/s_axi_aclk"
+          "axi_intc_0/s_axi_aclk"
         ]
       },
       "reset_rtl_0_1": {
@@ -1158,8 +947,7 @@
           "axi_timer_0/s_axi_aresetn",
           "axi_uartlite_0/s_axi_aresetn",
           "axi_smc/aresetn",
-          "axi_intc_0/s_axi_aresetn",
-          "axi_fifo_mm_s_0/s_axi_aresetn"
+          "axi_intc_0/s_axi_aresetn"
         ]
       },
       "xlconcat_0_dout": {
@@ -1174,12 +962,6 @@
         "address_spaces": {
           "Data": {
             "segments": {
-              "SEG_axi_fifo_mm_s_0_Mem0": {
-                "address_block": "/axi_fifo_mm_s_0/S_AXI/Mem0",
-                "offset": "0x44A10000",
-                "range": "64K",
-                "offset_high_param": "C_HIGHADDR"
-              },
               "SEG_axi_gpio_0_Reg": {
                 "address_block": "/axi_gpio_0/S_AXI/Reg",
                 "offset": "0x40000000",

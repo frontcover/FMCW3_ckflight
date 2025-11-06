@@ -91,17 +91,7 @@ architecture Behavioral of top_module is
         spi0_miso               : in STD_LOGIC;
         spi0_sck                : out STD_LOGIC;
         spi0_cs                 : out STD_LOGIC_VECTOR ( 0 to 0 );
-        clk_100MHz              : in STD_LOGIC;        
-        
-        AXI_STR_TXD_0_tdata     : out STD_LOGIC_VECTOR ( 31 downto 0 );
-        AXI_STR_TXD_0_tlast     : out STD_LOGIC;
-        AXI_STR_TXD_0_tready    : in STD_LOGIC;
-        AXI_STR_TXD_0_tvalid    : out STD_LOGIC;
-        
-        AXI_STR_RXD_0_tdata     : in STD_LOGIC_VECTOR ( 31 downto 0 );
-        AXI_STR_RXD_0_tlast     : in STD_LOGIC;
-        AXI_STR_RXD_0_tready    : out STD_LOGIC;
-        AXI_STR_RXD_0_tvalid    : in STD_LOGIC
+        clk_100MHz              : in STD_LOGIC
     );
     end component microblaze_wrapper;
     
@@ -152,17 +142,7 @@ architecture Behavioral of top_module is
             usb_readdata     : in  std_logic_vector(7 downto 0);
             chipselect       : out std_logic;
             read_n           : out std_logic;
-            config_done      : out std_logic;
-            
-            fifotx_tdata     : in STD_LOGIC_VECTOR ( 31 downto 0 );
-            fifotx_tlast     : in STD_LOGIC;
-            fifotx_tready    : out STD_LOGIC;
-            fifotx_tvalid    : in STD_LOGIC;
-                    
-            fiforx_tdata     : out STD_LOGIC_VECTOR ( 31 downto 0 );
-            fiforx_tlast     : out STD_LOGIC;
-            fiforx_tready    : in STD_LOGIC;
-            fiforx_tvalid    : out STD_LOGIC
+            config_done      : out std_logic
         );
     end component;
     
@@ -205,8 +185,7 @@ architecture Behavioral of top_module is
         clk         : IN STD_LOGIC;                
         probe0      : IN STD_LOGIC_VECTOR(7 DOWNTO 0);
         probe1      : IN STD_LOGIC_VECTOR(11 DOWNTO 0);
-        probe2      : IN STD_LOGIC_VECTOR(31 DOWNTO 0);
-        probe3      : IN STD_LOGIC_VECTOR(9 DOWNTO 0)
+        probe2      : IN STD_LOGIC_VECTOR(31 DOWNTO 0)
     );
     end component;
     
@@ -219,19 +198,7 @@ architecture Behavioral of top_module is
     signal s_uart_rtl_0_txd         : STD_LOGIC := '1';
     
     signal s_spi0_miso              : STD_LOGIC := 'Z';  -- ADF4158 does not have spi miso line so microblaze is connected to this internal signal
-    signal s_spi0_cs                : STD_LOGIC := '1';  -- LE pin will be controlled with gpio so this spi's cs will only be connected to internal signal for now
-   
-    -- AXI-Stream RX (VHDL → MicroBlaze)
-    signal s_AXI_STR_RXD_0_tdata    : std_logic_vector(31 downto 0);
-    signal s_AXI_STR_RXD_0_tvalid   : std_logic;
-    signal s_AXI_STR_RXD_0_tready   : std_logic;
-    signal s_AXI_STR_RXD_0_tlast    : std_logic;
-    
-    -- AXI-Stream TX (MicroBlaze → VHDL)
-    signal s_AXI_STR_TXD_0_tdata    : std_logic_vector(31 downto 0);
-    signal s_AXI_STR_TXD_0_tvalid   : std_logic;
-    signal s_AXI_STR_TXD_0_tready   : std_logic;
-    signal s_AXI_STR_TXD_0_tlast    : std_logic;
+    signal s_spi0_cs                : STD_LOGIC := '1';  -- LE pin will be controlled with gpio so this spi's cs will only be connected to internal signal for now   
    
     -- ADC signals
     signal s_adc_a_out              : std_logic_vector(15 downto 0) := (others => '0');         -- channel A data
@@ -264,7 +231,6 @@ architecture Behavioral of top_module is
     signal s_probe0 : std_logic_vector(7 DOWNTO 0) := (others => '0');
     signal s_probe1 : std_logic_vector(11 DOWNTO 0)  := (others => '0');
     signal s_probe2 : std_logic_vector(31 DOWNTO 0) := (others => '0');
-    signal s_probe3 : std_logic_vector(9 DOWNTO 0) := (others => '0');
     
     signal muxout_sync : std_logic := '0';
     signal muxout_sync_d : std_logic := '0';
@@ -339,17 +305,7 @@ begin
         spi0_mosi                       => adf_data,        -- spi mosi
         spi0_sck                        => adf_clk,         -- spi clk
         uart_rtl_0_rxd                  => s_uart_rtl_0_rxd,
-        uart_rtl_0_txd                  => s_uart_rtl_0_txd,
-        
-        AXI_STR_RXD_0_tdata(31 downto 0)=> s_AXI_STR_RXD_0_tdata(31 downto 0),
-        AXI_STR_RXD_0_tlast             => s_AXI_STR_RXD_0_tlast,
-        AXI_STR_RXD_0_tready            => s_AXI_STR_RXD_0_tready,
-        AXI_STR_RXD_0_tvalid            => s_AXI_STR_RXD_0_tvalid,
-        
-        AXI_STR_TXD_0_tdata(31 downto 0)=> s_AXI_STR_TXD_0_tdata(31 downto 0),
-        AXI_STR_TXD_0_tlast             => s_AXI_STR_TXD_0_tlast,
-        AXI_STR_TXD_0_tready            => s_AXI_STR_TXD_0_tready,
-        AXI_STR_TXD_0_tvalid            => s_AXI_STR_TXD_0_tvalid
+        uart_rtl_0_txd                  => s_uart_rtl_0_txd
     );
     
     -- Only DATA_A 12 bit line is connected to fpga
@@ -412,17 +368,7 @@ begin
         usb_readdata     => s_config_usb_readdata,
         chipselect       => s_config_usb_chipselect,
         read_n           => s_config_usb_read_n,
-        config_done      => s_config_done,
-        
-        fifotx_tdata     => s_AXI_STR_TXD_0_tdata,
-        fifotx_tlast     => s_AXI_STR_TXD_0_tlast,
-        fifotx_tready    => s_AXI_STR_TXD_0_tready,
-        fifotx_tvalid    => s_AXI_STR_TXD_0_tvalid,
-                
-        fiforx_tdata     => s_AXI_STR_RXD_0_tdata,
-        fiforx_tlast     => s_AXI_STR_RXD_0_tlast,
-        fiforx_tready    => s_AXI_STR_RXD_0_tready,
-        fiforx_tvalid    => s_AXI_STR_RXD_0_tvalid
+        config_done      => s_config_done
     );
     
     -- Control FSM instantiation    
@@ -460,8 +406,7 @@ begin
         clk    => clk_40mhz,
         probe0 => s_probe0,
         probe1 => s_probe1,
-        probe2 => s_probe2,
-        probe3 => s_probe3
+        probe2 => s_probe2
     );
 
 end Behavioral;
