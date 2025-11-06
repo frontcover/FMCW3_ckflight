@@ -92,10 +92,12 @@ architecture Behavioral of top_module is
         spi0_sck                : out STD_LOGIC;
         spi0_cs                 : out STD_LOGIC_VECTOR ( 0 to 0 );
         clk_100MHz              : in STD_LOGIC;        
+        
         AXI_STR_TXD_0_tdata     : out STD_LOGIC_VECTOR ( 31 downto 0 );
         AXI_STR_TXD_0_tlast     : out STD_LOGIC;
         AXI_STR_TXD_0_tready    : in STD_LOGIC;
         AXI_STR_TXD_0_tvalid    : out STD_LOGIC;
+        
         AXI_STR_RXD_0_tdata     : in STD_LOGIC_VECTOR ( 31 downto 0 );
         AXI_STR_RXD_0_tlast     : in STD_LOGIC;
         AXI_STR_RXD_0_tready    : out STD_LOGIC;
@@ -139,18 +141,28 @@ architecture Behavioral of top_module is
     
     component config is
         generic (
-            PACKET_SIZE     : integer := CONFIG_PACKET_SIZE
+            PACKET_SIZE      : integer := CONFIG_PACKET_SIZE
         );
         port (
-            clk             : in  std_logic;
-            reset_n         : in  std_logic; -- active low reset
-            soft_reset_n    : in  std_logic; -- active low software reset by microblaze to reset modules for next radar op
-            usb_rx_empty    : in  std_logic;
-            usb_readdata    : in  std_logic_vector(7 downto 0);
-            chipselect      : out std_logic;
-            read_n          : out std_logic;
-            config_done     : out std_logic;
-            data_out        : out std_logic_vector(PACKET_SIZE*8-1 downto 0)
+            clk_40mhz        : in  std_logic;
+            clk_100mhz       : in  std_logic;
+            reset_n          : in  std_logic; -- active low reset
+            soft_reset_n     : in  std_logic; -- active low software reset by microblaze to reset modules for next radar op
+            usb_rx_empty     : in  std_logic;
+            usb_readdata     : in  std_logic_vector(7 downto 0);
+            chipselect       : out std_logic;
+            read_n           : out std_logic;
+            config_done      : out std_logic;
+            
+            fifotx_tdata     : in STD_LOGIC_VECTOR ( 31 downto 0 );
+            fifotx_tlast     : in STD_LOGIC;
+            fifotx_tready    : out STD_LOGIC;
+            fifotx_tvalid    : in STD_LOGIC;
+                    
+            fiforx_tdata     : out STD_LOGIC_VECTOR ( 31 downto 0 );
+            fiforx_tlast     : out STD_LOGIC;
+            fiforx_tready    : in STD_LOGIC;
+            fiforx_tvalid    : out STD_LOGIC
         );
     end component;
     
@@ -210,16 +222,16 @@ architecture Behavioral of top_module is
     signal s_spi0_cs                : STD_LOGIC := '1';  -- LE pin will be controlled with gpio so this spi's cs will only be connected to internal signal for now
    
     -- AXI-Stream RX (VHDL → MicroBlaze)
-    signal AXI_STR_RXD_0_tdata  : std_logic_vector(31 downto 0);
-    signal AXI_STR_RXD_0_tvalid : std_logic;
-    signal AXI_STR_RXD_0_tready : std_logic;
-    signal AXI_STR_RXD_0_tlast  : std_logic;
+    signal s_AXI_STR_RXD_0_tdata    : std_logic_vector(31 downto 0);
+    signal s_AXI_STR_RXD_0_tvalid   : std_logic;
+    signal s_AXI_STR_RXD_0_tready   : std_logic;
+    signal s_AXI_STR_RXD_0_tlast    : std_logic;
     
     -- AXI-Stream TX (MicroBlaze → VHDL)
-    signal AXI_STR_TXD_0_tdata  : std_logic_vector(31 downto 0);
-    signal AXI_STR_TXD_0_tvalid : std_logic;
-    signal AXI_STR_TXD_0_tready : std_logic;
-    signal AXI_STR_TXD_0_tlast  : std_logic;
+    signal s_AXI_STR_TXD_0_tdata    : std_logic_vector(31 downto 0);
+    signal s_AXI_STR_TXD_0_tvalid   : std_logic;
+    signal s_AXI_STR_TXD_0_tready   : std_logic;
+    signal s_AXI_STR_TXD_0_tlast    : std_logic;
    
     -- ADC signals
     signal s_adc_a_out              : std_logic_vector(15 downto 0) := (others => '0');         -- channel A data
@@ -233,7 +245,6 @@ architecture Behavioral of top_module is
         
     -- CONFIG signals
     signal s_config_done            : std_logic := '0';   
-    signal s_config_data            : std_logic_vector(CONFIG_PACKET_SIZE*8-1 downto 0) := (others => '0');
     signal s_config_usb_readdata    : std_logic_vector(7 downto 0) := (others => '0');
     signal s_config_usb_chipselect  : std_logic := '0';
     signal s_config_usb_read_n      : std_logic := '1';
@@ -330,14 +341,15 @@ begin
         uart_rtl_0_rxd                  => s_uart_rtl_0_rxd,
         uart_rtl_0_txd                  => s_uart_rtl_0_txd,
         
-        AXI_STR_RXD_0_tdata(31 downto 0)=> AXI_STR_RXD_0_tdata(31 downto 0),
-        AXI_STR_RXD_0_tlast             => AXI_STR_RXD_0_tlast,
-        AXI_STR_RXD_0_tready            => AXI_STR_RXD_0_tready,
-        AXI_STR_RXD_0_tvalid            => AXI_STR_RXD_0_tvalid,
-        AXI_STR_TXD_0_tdata(31 downto 0)=> AXI_STR_TXD_0_tdata(31 downto 0),
-        AXI_STR_TXD_0_tlast             => AXI_STR_TXD_0_tlast,
-        AXI_STR_TXD_0_tready            => AXI_STR_TXD_0_tready,
-        AXI_STR_TXD_0_tvalid            => AXI_STR_TXD_0_tvalid
+        AXI_STR_RXD_0_tdata(31 downto 0)=> s_AXI_STR_RXD_0_tdata(31 downto 0),
+        AXI_STR_RXD_0_tlast             => s_AXI_STR_RXD_0_tlast,
+        AXI_STR_RXD_0_tready            => s_AXI_STR_RXD_0_tready,
+        AXI_STR_RXD_0_tvalid            => s_AXI_STR_RXD_0_tvalid,
+        
+        AXI_STR_TXD_0_tdata(31 downto 0)=> s_AXI_STR_TXD_0_tdata(31 downto 0),
+        AXI_STR_TXD_0_tlast             => s_AXI_STR_TXD_0_tlast,
+        AXI_STR_TXD_0_tready            => s_AXI_STR_TXD_0_tready,
+        AXI_STR_TXD_0_tvalid            => s_AXI_STR_TXD_0_tvalid
     );
     
     -- Only DATA_A 12 bit line is connected to fpga
@@ -392,15 +404,25 @@ begin
         PACKET_SIZE => CONFIG_PACKET_SIZE
     )
     port map (
-        clk          => clk_40mhz,
-        reset_n      => reset_n,        -- top-level reset signal
-        soft_reset_n => s_soft_reset_n,
-        usb_rx_empty => s_rx_empty,
-        usb_readdata => s_config_usb_readdata,
-        chipselect   => s_config_usb_chipselect,
-        read_n       => s_config_usb_read_n,
-        config_done  => s_config_done,
-        data_out     => s_config_data
+        clk_40mhz        => clk_40mhz,
+        clk_100mhz       => clk_100mhz,
+        reset_n          => reset_n,        -- top-level reset signal
+        soft_reset_n     => s_soft_reset_n,
+        usb_rx_empty     => s_rx_empty,
+        usb_readdata     => s_config_usb_readdata,
+        chipselect       => s_config_usb_chipselect,
+        read_n           => s_config_usb_read_n,
+        config_done      => s_config_done,
+        
+        fifotx_tdata     => s_AXI_STR_TXD_0_tdata,
+        fifotx_tlast     => s_AXI_STR_TXD_0_tlast,
+        fifotx_tready    => s_AXI_STR_TXD_0_tready,
+        fifotx_tvalid    => s_AXI_STR_TXD_0_tvalid,
+                
+        fiforx_tdata     => s_AXI_STR_RXD_0_tdata,
+        fiforx_tlast     => s_AXI_STR_RXD_0_tlast,
+        fiforx_tready    => s_AXI_STR_RXD_0_tready,
+        fiforx_tvalid    => s_AXI_STR_RXD_0_tvalid
     );
     
     -- Control FSM instantiation    
