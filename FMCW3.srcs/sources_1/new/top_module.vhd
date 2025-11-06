@@ -83,15 +83,23 @@ architecture Behavioral of top_module is
     -- Then vhdl code will run logic according to the state of muxout pulse (READBACK TO MUXOUT is set on spi config for this)
     component microblaze_wrapper is
     port (
-        gpio_rtl_0_tri_o    : out STD_LOGIC_VECTOR ( 15 downto 0 );
-        uart_rtl_0_rxd      : in STD_LOGIC;
-        uart_rtl_0_txd      : out STD_LOGIC;
-        reset_rtl_0         : in STD_LOGIC;
-        spi0_mosi           : out STD_LOGIC;
-        spi0_miso           : in STD_LOGIC;
-        spi0_sck            : out STD_LOGIC;
-        spi0_cs             : out STD_LOGIC_VECTOR ( 0 to 0 );
-        clk_100MHz          : in STD_LOGIC
+        gpio_rtl_0_tri_o        : out STD_LOGIC_VECTOR ( 15 downto 0 );
+        uart_rtl_0_rxd          : in STD_LOGIC;
+        uart_rtl_0_txd          : out STD_LOGIC;
+        reset_rtl_0             : in STD_LOGIC;
+        spi0_mosi               : out STD_LOGIC;
+        spi0_miso               : in STD_LOGIC;
+        spi0_sck                : out STD_LOGIC;
+        spi0_cs                 : out STD_LOGIC_VECTOR ( 0 to 0 );
+        clk_100MHz              : in STD_LOGIC;        
+        AXI_STR_TXD_0_tdata     : out STD_LOGIC_VECTOR ( 31 downto 0 );
+        AXI_STR_TXD_0_tlast     : out STD_LOGIC;
+        AXI_STR_TXD_0_tready    : in STD_LOGIC;
+        AXI_STR_TXD_0_tvalid    : out STD_LOGIC;
+        AXI_STR_RXD_0_tdata     : in STD_LOGIC_VECTOR ( 31 downto 0 );
+        AXI_STR_RXD_0_tlast     : in STD_LOGIC;
+        AXI_STR_RXD_0_tready    : out STD_LOGIC;
+        AXI_STR_RXD_0_tvalid    : in STD_LOGIC
     );
     end component microblaze_wrapper;
     
@@ -200,7 +208,19 @@ architecture Behavioral of top_module is
     
     signal s_spi0_miso              : STD_LOGIC := 'Z';  -- ADF4158 does not have spi miso line so microblaze is connected to this internal signal
     signal s_spi0_cs                : STD_LOGIC := '1';  -- LE pin will be controlled with gpio so this spi's cs will only be connected to internal signal for now
-        
+   
+    -- AXI-Stream RX (VHDL → MicroBlaze)
+    signal AXI_STR_RXD_0_tdata  : std_logic_vector(31 downto 0);
+    signal AXI_STR_RXD_0_tvalid : std_logic;
+    signal AXI_STR_RXD_0_tready : std_logic;
+    signal AXI_STR_RXD_0_tlast  : std_logic;
+    
+    -- AXI-Stream TX (MicroBlaze → VHDL)
+    signal AXI_STR_TXD_0_tdata  : std_logic_vector(31 downto 0);
+    signal AXI_STR_TXD_0_tvalid : std_logic;
+    signal AXI_STR_TXD_0_tready : std_logic;
+    signal AXI_STR_TXD_0_tlast  : std_logic;
+   
     -- ADC signals
     signal s_adc_a_out              : std_logic_vector(15 downto 0) := (others => '0');         -- channel A data
     signal s_adc_b_out              : std_logic_vector(15 downto 0) := (others => '0');         -- channel B data
@@ -308,7 +328,16 @@ begin
         spi0_mosi                       => adf_data,        -- spi mosi
         spi0_sck                        => adf_clk,         -- spi clk
         uart_rtl_0_rxd                  => s_uart_rtl_0_rxd,
-        uart_rtl_0_txd                  => s_uart_rtl_0_txd
+        uart_rtl_0_txd                  => s_uart_rtl_0_txd,
+        
+        AXI_STR_RXD_0_tdata(31 downto 0)=> AXI_STR_RXD_0_tdata(31 downto 0),
+        AXI_STR_RXD_0_tlast             => AXI_STR_RXD_0_tlast,
+        AXI_STR_RXD_0_tready            => AXI_STR_RXD_0_tready,
+        AXI_STR_RXD_0_tvalid            => AXI_STR_RXD_0_tvalid,
+        AXI_STR_TXD_0_tdata(31 downto 0)=> AXI_STR_TXD_0_tdata(31 downto 0),
+        AXI_STR_TXD_0_tlast             => AXI_STR_TXD_0_tlast,
+        AXI_STR_TXD_0_tready            => AXI_STR_TXD_0_tready,
+        AXI_STR_TXD_0_tvalid            => AXI_STR_TXD_0_tvalid
     );
     
     -- Only DATA_A 12 bit line is connected to fpga
