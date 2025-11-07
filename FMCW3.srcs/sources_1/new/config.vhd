@@ -179,7 +179,7 @@ begin
                     end if;
             
                 when uart_send_done =>
-                    config_bytes_ready <= '0';
+                    
                     uart_st <= uart_send_done; -- reset or soft reset needed.
                 
                 when others =>

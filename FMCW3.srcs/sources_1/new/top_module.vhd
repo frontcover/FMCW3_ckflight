@@ -142,7 +142,8 @@ architecture Behavioral of top_module is
             usb_readdata     : in  std_logic_vector(7 downto 0);
             chipselect       : out std_logic;
             read_n           : out std_logic;
-            config_done      : out std_logic
+            config_done      : out std_logic;
+            uart_txd         : out std_logic
         );
     end component;
     
@@ -368,7 +369,8 @@ begin
         usb_readdata     => s_config_usb_readdata,
         chipselect       => s_config_usb_chipselect,
         read_n           => s_config_usb_read_n,
-        config_done      => s_config_done
+        config_done      => s_config_done,
+        uart_txd         => s_uart_rtl_0_rxd
     );
     
     -- Control FSM instantiation    
