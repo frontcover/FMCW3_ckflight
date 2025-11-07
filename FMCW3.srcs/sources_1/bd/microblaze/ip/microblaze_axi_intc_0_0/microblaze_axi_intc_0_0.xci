@@ -45,8 +45,8 @@
         "C_NUM_INTR_INPUTS": [ { "value": "2", "resolve_type": "generated", "format": "long", "usage": "all" } ],
         "C_NUM_SW_INTR": [ { "value": "0", "resolve_type": "generated", "format": "long", "usage": "all" } ],
         "C_KIND_OF_INTR": [ { "value": "0xfffffffc", "resolve_type": "generated", "format": "bitString", "usage": "all" } ],
-        "C_KIND_OF_EDGE": [ { "value": "0xFFFFFFFF", "resolve_type": "generated", "format": "bitString", "usage": "all" } ],
-        "C_KIND_OF_LVL": [ { "value": "0xFFFFFFFF", "resolve_type": "generated", "format": "bitString", "usage": "all" } ],
+        "C_KIND_OF_EDGE": [ { "value": "0xffffffff", "resolve_type": "generated", "format": "bitString", "usage": "all" } ],
+        "C_KIND_OF_LVL": [ { "value": "0xffffffff", "resolve_type": "generated", "format": "bitString", "usage": "all" } ],
         "C_ASYNC_INTR": [ { "value": "0xFFFFFFFD", "resolve_type": "generated", "format": "bitString", "usage": "all" } ],
         "C_NUM_SYNC_FF": [ { "value": "2", "resolve_type": "generated", "format": "long", "usage": "all" } ],
         "C_ADDR_WIDTH": [ { "value": "32", "resolve_type": "generated", "format": "long", "usage": "all" } ],
@@ -219,7 +219,7 @@
           "abstraction_type": "xilinx.com:signal:interrupt_rtl:1.0",
           "mode": "slave",
           "parameters": {
-            "SENSITIVITY": [ { "value": "LEVEL_HIGH:LEVEL_HIGH", "value_src": "ip_propagated", "value_permission": "bd", "resolve_type": "generated", "usage": "all" } ],
+            "SENSITIVITY": [ { "value": "LEVEL_HIGH:NULL", "value_src": "ip_propagated", "value_permission": "bd", "resolve_type": "generated", "usage": "all" } ],
             "PortWidth": [ { "value": "2", "value_src": "ip_propagated", "value_permission": "bd", "resolve_type": "generated", "format": "long", "is_ips_inferred": true, "is_static_object": false } ]
           },
           "port_maps": {

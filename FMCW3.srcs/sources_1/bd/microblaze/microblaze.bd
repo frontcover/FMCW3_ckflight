@@ -178,6 +178,9 @@
         "inst_hier_path": "microblaze_0",
         "has_run_ip_tcl": "true",
         "parameters": {
+          "C_AREA_OPTIMIZED": {
+            "value": "1"
+          },
           "C_DEBUG_ENABLED": {
             "value": "1"
           },
@@ -196,11 +199,26 @@
           "C_NUMBER_OF_PC_BRK": {
             "value": "8"
           },
+          "C_USE_BARREL": {
+            "value": "1"
+          },
           "C_USE_DIV": {
             "value": "1"
           },
           "C_USE_FPU": {
             "value": "1"
+          },
+          "C_USE_HW_MUL": {
+            "value": "1"
+          },
+          "C_USE_MSR_INSTR": {
+            "value": "1"
+          },
+          "C_USE_PCMP_INSTR": {
+            "value": "1"
+          },
+          "C_USE_REORDER_INSTR": {
+            "value": "0"
           },
           "G_TEMPLATE_LIST": {
             "value": "8"
@@ -708,26 +726,6 @@
             "mode": "Master",
             "vlnv_bus_definition": "xilinx.com:interface:aximm:1.0",
             "vlnv": "xilinx.com:interface:aximm_rtl:1.0",
-            "parameters": {
-              "NUM_READ_OUTSTANDING": {
-                "value": "1"
-              },
-              "NUM_READ_THREADS": {
-                "value": "1"
-              },
-              "NUM_WRITE_OUTSTANDING": {
-                "value": "1"
-              },
-              "NUM_WRITE_THREADS": {
-                "value": "1"
-              },
-              "RUSER_BITS_PER_BYTE": {
-                "value": "0"
-              },
-              "WUSER_BITS_PER_BYTE": {
-                "value": "0"
-              }
-            },
             "bd_attributes": {
               "TYPE": {
                 "value": "interior",
@@ -909,16 +907,16 @@
       "microblaze_0_Clk_1": {
         "ports": [
           "clk_100MHz",
-          "microblaze_0/Clk",
           "microblaze_0_local_memory/clk_100MHz",
           "rst_clk_100MHz_100M/slowest_sync_clk",
-          "axi_smc/aclk",
           "axi_gpio_0/s_axi_aclk",
           "axi_quad_spi_0/ext_spi_clk",
           "axi_quad_spi_0/s_axi_aclk",
           "axi_timer_0/s_axi_aclk",
           "axi_uartlite_0/s_axi_aclk",
-          "axi_intc_0/s_axi_aclk"
+          "axi_intc_0/s_axi_aclk",
+          "axi_smc/aclk",
+          "microblaze_0/Clk"
         ]
       },
       "reset_rtl_0_1": {
@@ -946,8 +944,8 @@
           "axi_quad_spi_0/s_axi_aresetn",
           "axi_timer_0/s_axi_aresetn",
           "axi_uartlite_0/s_axi_aresetn",
-          "axi_smc/aresetn",
-          "axi_intc_0/s_axi_aresetn"
+          "axi_intc_0/s_axi_aresetn",
+          "axi_smc/aresetn"
         ]
       },
       "xlconcat_0_dout": {
