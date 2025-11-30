@@ -10,6 +10,8 @@ The design separates slow-control and high-speed signal processing into two doma
 Handles low-speed configuration of on-board ICs (ADF4158 PLL, amplifier) through GPIO, SPI, and UART interfaces.
 Generates control signals such as ramp start, ramp configured, and sampling done flags.
 
+**Vitis code will be developed under the folder FMCW3_Microblaze**
+
 <img width="2455" height="1361" alt="Image" src="https://github.com/user-attachments/assets/97c1fb37-c0f2-4179-9d8f-e6b94bec952f" />
 
 **FPGA Logic Subsystem:**
